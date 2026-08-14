@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ComicController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ComicDetailController;
 use App\Http\Controllers\HomeController;
@@ -30,12 +31,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
-Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/admin', function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', function () {
         return redirect()->route('admin.dashboard');
     });
 
-    Route::get('/admin/dashboard', function () {
+    Route::get('/dashboard', function () {
         return view('admin.dashboard');
-    })->name('admin.dashboard');
+    })->name('dashboard');
+
+    Route::resource('comics', ComicController::class);
 });
