@@ -35,7 +35,7 @@
                             <span class="label">Genres</span>
                             <div class="tag-list">
                                 @foreach ($comic->genres as $genre)
-                                    <a href="{{ route('genres') }}" class="tag">{{ $genre->name }}</a>
+                                    <a href="{{ route('genres.show', $genre) }}" class="tag">{{ $genre->name }}</a>
                                 @endforeach
                             </div>
                         </div>

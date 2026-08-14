@@ -12,6 +12,7 @@ Route::get('/comics', [HomeController::class, 'comics'])->name('comics');
 Route::get('/comics/{comic}', [ComicDetailController::class, 'show'])->name('comic.detail');
 Route::get('/comics/{comic}/chapters/{chapter}', [ReaderController::class, 'show'])->name('chapter.reader');
 Route::get('/genres', [HomeController::class, 'genres'])->name('genres');
+Route::get('/genres/{genre:slug}', [HomeController::class, 'genre'])->name('genres.show');
 Route::get('/search', [HomeController::class, 'search'])->name('search');
 
 Route::middleware('guest')->group(function () {

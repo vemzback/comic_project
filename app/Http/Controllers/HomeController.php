@@ -82,6 +82,29 @@ class HomeController extends Controller
         return view('public.genres', compact('genres'));
     }
 
+    public function genre(Genre $genre): View
+    {
+        if (! Schema::hasTable('genres') || ! Schema::hasTable('comic_genres') || ! Schema::hasTable('comics')) {
+            return view('public.genres', ['genres' => collect(), 'selectedGenre' => $genre, 'genreComics' => collect()]);
+        }
+
+        $genreComics = $genre->comics()
+            ->whereNotNull('published_at')
+            ->orderByDesc('published_at')
+            ->get();
+
+        $genres = Genre::query()
+            ->withCount('comics')
+            ->orderBy('name')
+            ->get();
+
+        return view('public.genres', [
+            'selectedGenre' => $genre,
+            'genres' => $genres,
+            'genreComics' => $genreComics,
+        ]);
+    }
+
     public function search(Request $request): View
     {
         if (! Schema::hasTable('comics')) {

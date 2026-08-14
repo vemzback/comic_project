@@ -120,7 +120,7 @@
             @else
                 <div class="chapter-list">
                     @foreach ($latestChapters as $chapter)
-                        <article class="chapter-item">
+                        <a href="{{ route('chapter.reader', ['comic' => $chapter->comic, 'chapter' => $chapter]) }}" class="chapter-item chapter-item-link">
                             <div>
                                 <p class="chapter-meta">
                                     {{ $chapter->comic?->title ?? 'Unknown comic' }}
@@ -133,7 +133,7 @@
                                     <span>{{ $chapter->published_at->format('M d, Y') }}</span>
                                 @endif
                             </div>
-                        </article>
+                        </a>
                     @endforeach
                 </div>
             @endif
@@ -152,7 +152,7 @@
             @else
                 <div class="genre-grid">
                     @foreach ($genres as $genre)
-                        <a href="{{ route('genres') }}" class="genre-card">
+                        <a href="{{ route('genres.show', $genre) }}" class="genre-card">
                             <span class="genre-name">{{ $genre->name }}</span>
                             <span class="genre-count">{{ $genre->comics_count }} comic(s)</span>
                         </a>

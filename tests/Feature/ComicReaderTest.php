@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Chapter;
 use App\Models\Comic;
+use App\Models\Genre;
 use App\Models\Page;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -257,5 +258,49 @@ class ComicReaderTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('pages/test-comic/chapter-1/page-001.jpg');
+    }
+
+    public function test_search_results_include_comic_detail_links(): void
+    {
+        $comic = Comic::factory()->create([
+            'title' => 'Neon City Runner',
+            'description' => 'A story about motion and danger in the city.',
+            'published_at' => now(),
+        ]);
+
+        $response = $this->get(route('search', ['q' => 'Neon']));
+
+        $response->assertStatus(200);
+        $response->assertSee(route('comic.detail', $comic));
+    }
+
+    public function test_homepage_latest_chapters_link_to_reader(): void
+    {
+        $comic = Comic::factory()->create(['published_at' => now()]);
+        $chapter = Chapter::factory()->create([
+            'comic_id' => $comic->id,
+            'chapter_number' => 7,
+            'sort_order' => 7,
+            'is_published' => true,
+            'published_at' => now(),
+        ]);
+
+        $response = $this->get(route('home'));
+
+        $response->assertStatus(200);
+        $response->assertSee(route('chapter.reader', ['comic' => $comic, 'chapter' => $chapter]));
+    }
+
+    public function test_genre_page_shows_comics_for_the_selected_genre(): void
+    {
+        $genre = Genre::factory()->create(['slug' => 'action']);
+        $comic = Comic::factory()->create(['published_at' => now()]);
+        $comic->genres()->sync([$genre->id]);
+
+        $response = $this->get(route('genres.show', $genre));
+
+        $response->assertStatus(200);
+        $response->assertSee($comic->title);
+        $response->assertSee(route('comic.detail', $comic));
     }
 }

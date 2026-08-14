@@ -23,7 +23,7 @@
             @else
                 <div class="card-grid three-up">
                     @foreach ($results as $comic)
-                        <article class="comic-card">
+                        <a href="{{ route('comic.detail', $comic) }}" class="comic-card comic-card-link">
                             <div class="comic-cover-wrap">
                                 <img src="{{ $comic->cover_image ?: 'https://placehold.co/600x900/1f2937/ffffff?text=' . urlencode($comic->title) }}" alt="{{ $comic->title }} cover" class="comic-cover">
                             </div>
@@ -44,7 +44,7 @@
                                     </div>
                                 @endif
                             </div>
-                        </article>
+                        </a>
                     @endforeach
                 </div>
             @endif
