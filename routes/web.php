@@ -35,6 +35,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
+    Route::get('/profile/password', [ProfileController::class, 'showPassword'])->name('password.edit');
+    Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('password.update');
+
     Route::get('/bookmarks', [BookmarkController::class, 'index'])->name('bookmarks.index');
     Route::post('/bookmarks/{comic}', [BookmarkController::class, 'store'])->name('bookmarks.store');
     Route::delete('/bookmarks/{comic}', [BookmarkController::class, 'destroy'])->name('bookmarks.destroy');
