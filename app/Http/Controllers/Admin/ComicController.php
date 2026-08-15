@@ -8,6 +8,8 @@ use App\Models\Genre;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ComicController extends Controller
@@ -35,11 +37,13 @@ class ComicController extends Controller
         $validated = $this->validateComic($request, null);
 
         $comic = DB::transaction(function () use ($validated, $request) {
+            $coverPath = $this->storeMediaFile($request->file('cover_image'), 'comics/covers', $request->input('cover_image'));
+
             $comic = Comic::create([
                 'title' => $validated['title'],
                 'slug' => $validated['slug'],
                 'description' => $validated['description'] ?? null,
-                'cover_image' => $validated['cover_image'] ?? null,
+                'cover_image' => $coverPath ?? ($request->hasFile('cover_image') ? null : $request->input('cover_image')) ?? null,
                 'status' => $validated['status'],
                 'published_at' => $validated['published_at'] ?? null,
                 'is_featured' => (bool) ($validated['is_featured'] ?? false),
@@ -74,12 +78,14 @@ class ComicController extends Controller
     {
         $validated = $this->validateComic($request, $comic);
 
-        DB::transaction(function () use ($comic, $validated) {
+        DB::transaction(function () use ($comic, $request, $validated) {
+            $coverPath = $this->handleUploadedMedia($comic->cover_image, $request->file('cover_image'), 'comics/covers', $request->input('cover_image'));
+
             $comic->update([
                 'title' => $validated['title'],
                 'slug' => $validated['slug'],
                 'description' => $validated['description'] ?? null,
-                'cover_image' => $validated['cover_image'] ?? null,
+                'cover_image' => $coverPath ?? $comic->cover_image,
                 'status' => $validated['status'],
                 'published_at' => $validated['published_at'] ?? null,
                 'is_featured' => (bool) ($validated['is_featured'] ?? false),
@@ -95,6 +101,10 @@ class ComicController extends Controller
 
     public function destroy(Comic $comic): RedirectResponse
     {
+        if (! empty($comic->cover_image) && Storage::disk('public')->exists($comic->cover_image)) {
+            Storage::disk('public')->delete($comic->cover_image);
+        }
+
         $comic->delete();
 
         return redirect()->route('admin.comics.index')->with('success', 'Comic deleted successfully.');
@@ -106,7 +116,7 @@ class ComicController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:comics,slug' . ($comic ? ',' . $comic->id : '')],
             'description' => ['nullable', 'string'],
-            'cover_image' => ['nullable', 'string', 'max:255'],
+            'cover_image' => ['nullable'],
             'status' => ['required', 'string', 'in:ongoing,completed,hiatus'],
             'published_at' => ['nullable', 'date'],
             'is_featured' => ['nullable', 'boolean'],
@@ -116,6 +126,49 @@ class ComicController extends Controller
             'genres.*' => ['integer', 'exists:genres,id'],
         ];
 
-        return $request->validate($rules);
+        $validated = $request->validate($rules);
+
+        if ($request->hasFile('cover_image')) {
+            $request->validate([
+                'cover_image' => ['image', 'mimes:jpg,jpeg,png,gif,webp', 'max:2048'],
+            ]);
+        }
+
+        return $validated;
+    }
+
+    protected function handleUploadedMedia(?string $existingPath, $uploadedFile, string $directory, ?string $fallback = null): ?string
+    {
+        if ($uploadedFile instanceof \Illuminate\Http\UploadedFile) {
+            if ($existingPath && Storage::disk('public')->exists($existingPath)) {
+                Storage::disk('public')->delete($existingPath);
+            }
+
+            return $this->storeMediaFile($uploadedFile, $directory);
+        }
+
+        return is_string($fallback) && $fallback !== '' ? $fallback : $existingPath;
+    }
+
+    protected function storeMediaFile($uploadedFile, string $directory, ?string $fallback = null): ?string
+    {
+        if (! $uploadedFile) {
+            return is_string($fallback) && $fallback !== '' ? $fallback : null;
+        }
+
+        if (! $uploadedFile->isValid()) {
+            throw ValidationException::withMessages([
+                'cover_image' => ['The uploaded file is invalid.'],
+            ]);
+        }
+
+        return $uploadedFile->storeAs($directory, $this->buildMediaFilename($uploadedFile, $directory), 'public');
+    }
+
+    protected function buildMediaFilename($uploadedFile, string $directory): string
+    {
+        $extension = strtolower($uploadedFile->getClientOriginalExtension() ?: 'jpg');
+
+        return 'media_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
     }
 }

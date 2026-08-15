@@ -8,7 +8,9 @@ use App\Models\Comic;
 use App\Models\Page;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class PageController extends Controller
@@ -38,7 +40,7 @@ class PageController extends Controller
         $chapter->pages()->create([
             'page_number' => $validated['page_number'],
             'title' => $validated['title'] ?? null,
-            'image_path' => $validated['image_path'],
+            'image_path' => $this->storeMediaFile($request->file('image_path'), 'chapters/pages', $request->input('image_path')),
         ]);
 
         return redirect()->route('admin.comics.chapters.pages.index', [$comic, $chapter])->with('success', 'Page created successfully.');
@@ -70,7 +72,7 @@ class PageController extends Controller
         $page->update([
             'page_number' => $validated['page_number'],
             'title' => $validated['title'] ?? null,
-            'image_path' => $validated['image_path'],
+            'image_path' => $this->handleUploadedMedia($page->image_path, $request->file('image_path'), 'chapters/pages', $request->input('image_path')),
         ]);
 
         return redirect()->route('admin.comics.chapters.pages.index', [$comic, $chapter])->with('success', 'Page updated successfully.');
@@ -80,6 +82,10 @@ class PageController extends Controller
     {
         $this->ensureChapterBelongsToComic($comic, $chapter);
         $this->ensurePageBelongsToChapter($chapter, $page);
+
+        if (! empty($page->image_path) && Storage::disk('public')->exists($page->image_path)) {
+            Storage::disk('public')->delete($page->image_path);
+        }
 
         $page->delete();
 
@@ -112,9 +118,56 @@ class PageController extends Controller
                     ->ignore($page?->id),
             ],
             'title' => ['nullable', 'string', 'max:255'],
-            'image_path' => ['required', 'string', 'max:255'],
+            'image_path' => ['nullable'],
         ];
 
-        return $request->validate($rules);
+        if (! $request->hasFile('image_path') && blank($page?->image_path ?? $request->input('image_path'))) {
+            $rules['image_path'][] = 'required';
+        }
+
+        $validated = $request->validate($rules);
+
+        if ($request->hasFile('image_path')) {
+            $request->validate([
+                'image_path' => ['image', 'mimes:jpg,jpeg,png,gif,webp', 'max:2048'],
+            ]);
+        }
+
+        return $validated;
+    }
+
+    protected function handleUploadedMedia(?string $existingPath, $uploadedFile, string $directory, ?string $fallback = null): ?string
+    {
+        if ($uploadedFile instanceof \Illuminate\Http\UploadedFile) {
+            if ($existingPath && Storage::disk('public')->exists($existingPath)) {
+                Storage::disk('public')->delete($existingPath);
+            }
+
+            return $this->storeMediaFile($uploadedFile, $directory);
+        }
+
+        return is_string($fallback) && $fallback !== '' ? $fallback : $existingPath;
+    }
+
+    protected function storeMediaFile($uploadedFile, string $directory, ?string $fallback = null): ?string
+    {
+        if (! $uploadedFile) {
+            return is_string($fallback) && $fallback !== '' ? $fallback : null;
+        }
+
+        if (! $uploadedFile->isValid()) {
+            throw ValidationException::withMessages([
+                'image_path' => ['The uploaded file is invalid.'],
+            ]);
+        }
+
+        return $uploadedFile->storeAs($directory, $this->buildMediaFilename($uploadedFile, $directory), 'public');
+    }
+
+    protected function buildMediaFilename($uploadedFile, string $directory): string
+    {
+        $extension = strtolower($uploadedFile->getClientOriginalExtension() ?: 'jpg');
+
+        return 'media_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
     }
 }

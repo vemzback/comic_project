@@ -17,7 +17,7 @@
         </ul>
     @endif
 
-    <form method="POST" action="{{ route('admin.comics.chapters.pages.store', [$comic, $chapter]) }}">
+    <form method="POST" action="{{ route('admin.comics.chapters.pages.store', [$comic, $chapter]) }}" enctype="multipart/form-data">
         @csrf
 
         <div>
@@ -31,8 +31,8 @@
         </div>
 
         <div>
-            <label for="image_path">Image Path</label>
-            <input id="image_path" type="text" name="image_path" value="{{ old('image_path') }}" required>
+            <label for="image_path">Page Image</label>
+            <input id="image_path" type="file" name="image_path" accept="image/*" required>
         </div>
 
         <button type="submit">Save Page</button>

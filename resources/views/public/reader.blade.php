@@ -23,7 +23,7 @@
                     @foreach ($pages as $page)
                         <div class="reader-page">
                             <figure class="page-figure">
-                                <img src="{{ $page->image_path }}" 
+                                <img src="{{ Storage::disk('public')->url($page->image_path) }}" 
                                      alt="{{ $page->title ?: 'Page ' . $page->page_number }}" 
                                      class="page-image">
                                 @if ($page->title)

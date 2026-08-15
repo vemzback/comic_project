@@ -43,7 +43,7 @@
                     @foreach ($featuredComics as $comic)
                         <a href="{{ route('comic.detail', $comic) }}" class="comic-card comic-card-link">
                             <div class="comic-cover-wrap">
-                                <img src="{{ $comic->cover_image ?: 'https://placehold.co/600x900/1f2937/ffffff?text=' . urlencode($comic->title) }}" alt="{{ $comic->title }} cover" class="comic-cover">
+                                <img src="{{ $comic->cover_image ? Storage::disk('public')->url($comic->cover_image) : 'https://placehold.co/600x900/1f2937/ffffff?text=' . urlencode($comic->title) }}" alt="{{ $comic->title }} cover" class="comic-cover">
                             </div>
                             <div class="comic-body">
                                 <div class="meta-row">
@@ -83,7 +83,7 @@
                     @foreach ($latestComics as $comic)
                         <a href="{{ route('comic.detail', $comic) }}" class="comic-card comic-card-link">
                             <div class="comic-cover-wrap">
-                                <img src="{{ $comic->cover_image ?: 'https://placehold.co/600x900/374151/ffffff?text=' . urlencode($comic->title) }}" alt="{{ $comic->title }} cover" class="comic-cover">
+                                <img src="{{ $comic->cover_image ? Storage::disk('public')->url($comic->cover_image) : 'https://placehold.co/600x900/374151/ffffff?text=' . urlencode($comic->title) }}" alt="{{ $comic->title }} cover" class="comic-cover">
                             </div>
                             <div class="comic-body">
                                 <div class="meta-row">

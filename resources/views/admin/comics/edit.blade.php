@@ -17,7 +17,7 @@
         </ul>
     @endif
 
-    <form method="POST" action="{{ route('admin.comics.update', $comic) }}">
+    <form method="POST" action="{{ route('admin.comics.update', $comic) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
@@ -38,7 +38,10 @@
 
         <div>
             <label for="cover_image">Cover Image</label>
-            <input id="cover_image" type="text" name="cover_image" value="{{ old('cover_image', $comic->cover_image) }}">
+            <input id="cover_image" type="file" name="cover_image" accept="image/*">
+            @if ($comic->cover_image)
+                <p>Current: {{ $comic->cover_image }}</p>
+            @endif
         </div>
 
         <div>

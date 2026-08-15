@@ -7,6 +7,7 @@ use App\Models\Chapter;
 use App\Models\Comic;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -75,6 +76,12 @@ class ChapterController extends Controller
     public function destroy(Comic $comic, Chapter $chapter): RedirectResponse
     {
         $this->ensureChapterBelongsToComic($comic, $chapter);
+
+        foreach ($chapter->pages as $page) {
+            if (! empty($page->image_path) && Storage::disk('public')->exists($page->image_path)) {
+                Storage::disk('public')->delete($page->image_path);
+            }
+        }
 
         $chapter->delete();
 

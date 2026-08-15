@@ -17,7 +17,7 @@
         </ul>
     @endif
 
-    <form method="POST" action="{{ route('admin.comics.chapters.pages.update', [$comic, $chapter, $page]) }}">
+    <form method="POST" action="{{ route('admin.comics.chapters.pages.update', [$comic, $chapter, $page]) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
@@ -32,8 +32,11 @@
         </div>
 
         <div>
-            <label for="image_path">Image Path</label>
-            <input id="image_path" type="text" name="image_path" value="{{ old('image_path', $page->image_path) }}" required>
+            <label for="image_path">Page Image</label>
+            <input id="image_path" type="file" name="image_path" accept="image/*">
+            @if ($page->image_path)
+                <p>Current: {{ $page->image_path }}</p>
+            @endif
         </div>
 
         <button type="submit">Update Page</button>
