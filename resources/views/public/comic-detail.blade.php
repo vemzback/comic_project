@@ -105,6 +105,39 @@
                     </div>
                 @endif
 
+                <div class="rating-section" style="margin-top: 2rem; margin-bottom: 2rem;">
+                    <h2>Rating</h2>
+
+                    @if ($ratingCount > 0)
+                        <p><strong>{{ number_format($averageRating, 1) }}/5</strong> from {{ $ratingCount }} rating{{ $ratingCount === 1 ? '' : 's' }}</p>
+                    @else
+                        <p>No ratings yet.</p>
+                    @endif
+
+                    @auth
+                        <form method="POST" action="{{ route('ratings.store', $comic) }}" style="margin-top: 1rem;">
+                            @csrf
+                            <div class="form-group">
+                                <label for="score">Your rating</label>
+                                <select id="score" name="score" class="form-control" required>
+                                    <option value="">Select a score</option>
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <option value="{{ $i }}" {{ old('score', optional($userRating)->score) == $i ? 'selected' : '' }}>{{ $i }} / 5</option>
+                                    @endfor
+                                </select>
+                            </div>
+                            @error('score')
+                                <div class="alert alert-danger" style="margin-top: .5rem;">{{ $message }}</div>
+                            @enderror
+                            <button type="submit" class="btn btn-primary" style="margin-top: .75rem;">
+                                {{ $userRating ? 'Update Rating' : 'Rate This Comic' }}
+                            </button>
+                        </form>
+                    @else
+                        <p><a href="{{ route('login') }}">Login</a> to rate this comic.</p>
+                    @endauth
+                </div>
+
                 <div class="comments-section" style="margin-top: 2rem;">
                     <h2>Comments</h2>
 

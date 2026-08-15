@@ -25,6 +25,10 @@ class ComicDetailController extends Controller
 
         $publishedChaptersCount = $comic->chapters->count();
 
-        return view('public.comic-detail', compact('comic', 'publishedChaptersCount'));
+        $userRating = auth()->check() ? $comic->ratings()->where('user_id', auth()->id())->first() : null;
+        $averageRating = $comic->ratings()->average('score');
+        $ratingCount = $comic->ratings()->count();
+
+        return view('public.comic-detail', compact('comic', 'publishedChaptersCount', 'userRating', 'averageRating', 'ratingCount'));
     }
 }
