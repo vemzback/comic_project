@@ -25,6 +25,7 @@
                         <a href="{{ route('register') }}" class="btn btn-primary">Register</a>
                     @else
                         <a href="{{ route('profile') }}" class="btn btn-ghost">Profile</a>
+                        <a href="{{ route('bookmarks.index') }}" class="btn btn-ghost">Bookmarks</a>
 
                         @if (auth()->user()->role === 'admin')
                             <a href="{{ route('admin.dashboard') }}" class="btn btn-ghost">Admin Dashboard</a>

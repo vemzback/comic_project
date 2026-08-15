@@ -30,6 +30,32 @@
                         <span class="label">Chapters</span>
                         <span>{{ $publishedChaptersCount }} published</span>
                     </div>
+
+                    @auth
+                        @php
+                            $isBookmarked = auth()->user()->bookmarks()->where('comic_id', $comic->id)->exists();
+                        @endphp
+
+                        <div class="meta-item">
+                            @if ($isBookmarked)
+                                <form method="POST" action="{{ route('bookmarks.destroy', $comic) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger">Remove Bookmark</button>
+                                </form>
+                            @else
+                                <form method="POST" action="{{ route('bookmarks.store', $comic) }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-primary">Bookmark</button>
+                                </form>
+                            @endif
+                        </div>
+                    @else
+                        <div class="meta-item">
+                            <a href="{{ route('login') }}" class="btn btn-ghost">Login to bookmark</a>
+                        </div>
+                    @endauth
+
                     @if ($comic->genres->isNotEmpty())
                         <div class="meta-item">
                             <span class="label">Genres</span>
