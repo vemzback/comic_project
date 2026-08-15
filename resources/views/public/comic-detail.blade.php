@@ -104,6 +104,53 @@
                         <p>No chapters published yet.</p>
                     </div>
                 @endif
+
+                <div class="comments-section" style="margin-top: 2rem;">
+                    <h2>Comments</h2>
+
+                    @auth
+                        <form method="POST" action="{{ route('comments.store', $comic) }}" style="margin-bottom: 1.5rem;">
+                            <div style="display:none;"><?php echo '@csrf'; ?></div>
+                            @csrf
+                            <div class="form-group">
+                                <label for="body">Leave a comment</label>
+                                <textarea id="body" name="body" rows="4" class="form-control" required>{{ old('body') }}</textarea>
+                            </div>
+                            @error('body')
+                                <div class="alert alert-danger" style="margin-top: .5rem;">{{ $message }}</div>
+                            @enderror
+                            <button type="submit" class="btn btn-primary" style="margin-top: .75rem;">Post Comment</button>
+                        </form>
+                    @else
+                        <p><a href="{{ route('login') }}">Login</a> to join the discussion.</p>
+                    @endauth
+
+                    @if ($comic->comments->isEmpty())
+                        <div class="empty-state">
+                            <p>No comments</p>
+                        </div>
+                    @else
+                        @foreach ($comic->comments as $comment)
+                            <div class="comment-item" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; background: #fff;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: .5rem;">
+                                    <strong>{{ $comment->user->name }}</strong>
+                                    <small>{{ $comment->created_at->format('M d, Y') }}</small>
+                                </div>
+                                <p style="margin: 0; white-space: pre-line;">{{ $comment->body }}</p>
+
+                                @auth
+                                    @if ($comment->user_id === auth()->id())
+                                        <form method="POST" action="{{ route('comments.destroy', $comment) }}" style="margin-top: .75rem;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                        </form>
+                                    @endif
+                                @endauth
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
             </div>
         </div>
     </section>

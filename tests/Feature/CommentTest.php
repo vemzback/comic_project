@@ -371,7 +371,7 @@ class CommentTest extends TestCase
 
         if ($response->getStatusCode() === 200) {
             // If form exists, it should have CSRF token
-            $response->assertSee('@csrf', caseSensitive: false);
+            $response->assertSee('@csrf');
         }
     }
 

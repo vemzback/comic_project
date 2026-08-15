@@ -9,7 +9,6 @@ class ComicDetailController extends Controller
 {
     public function show(Comic $comic): View
     {
-        // Load chapters with pages
         $comic->load([
             'chapters' => function ($query) {
                 $query->where('is_published', true)
@@ -17,9 +16,13 @@ class ComicDetailController extends Controller
                     ->orderBy('chapter_number');
             },
             'genres',
+            'comments' => function ($query) {
+                $query->where('is_approved', true)
+                    ->with('user')
+                    ->latest();
+            },
         ]);
 
-        // Get published chapters count
         $publishedChaptersCount = $comic->chapters->count();
 
         return view('public.comic-detail', compact('comic', 'publishedChaptersCount'));
