@@ -2,6 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Bookmark;
+use App\Models\Chapter;
+use App\Models\Comic;
+use App\Models\Comment;
+use App\Models\Page;
+use App\Models\Rating;
+use App\Models\ReadingHistory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -75,6 +82,56 @@ class AuthFlowTest extends TestCase
     public function test_guest_is_redirected_to_login_for_admin_route(): void
     {
         $this->get('/admin/dashboard')->assertRedirect('/login');
+    }
+
+    public function test_admin_dashboard_shows_platform_summary_metrics(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $users = User::factory()->count(3)->create();
+        $comics = Comic::factory()->count(3)->create(['status' => 'ongoing']);
+        Comic::factory()->create(['status' => 'completed']);
+        $chapter = Chapter::factory()->create();
+        Page::factory()->count(4)->create(['chapter_id' => $chapter->id]);
+
+        Bookmark::create(['user_id' => $users[0]->id, 'comic_id' => $comics[0]->id]);
+        Bookmark::create(['user_id' => $users[1]->id, 'comic_id' => $comics[1]->id]);
+
+        ReadingHistory::create([
+            'user_id' => $users[2]->id,
+            'comic_id' => $comics[2]->id,
+            'chapter_id' => $chapter->id,
+            'page_number' => 2,
+            'last_read_at' => now(),
+        ]);
+
+        Comment::create([
+            'user_id' => $users[0]->id,
+            'comic_id' => $comics[0]->id,
+            'body' => 'Looks good.',
+            'is_approved' => true,
+        ]);
+
+        Rating::create([
+            'user_id' => $users[1]->id,
+            'comic_id' => $comics[1]->id,
+            'score' => 5,
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/admin/dashboard')
+            ->assertOk()
+            ->assertSee('Platform Overview')
+            ->assertSee('Total Users')
+            ->assertSee((string) User::count())
+            ->assertSee('Total Comics')
+            ->assertSee((string) Comic::count())
+            ->assertSee('Total Chapters')
+            ->assertSee((string) Chapter::count())
+            ->assertSee('Total Pages')
+            ->assertSee((string) Page::count())
+            ->assertSee('Bookmarks')
+            ->assertSee('Comments')
+            ->assertSee('Ratings');
     }
 
     public function test_user_can_view_profile(): void

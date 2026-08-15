@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ChapterController;
 use App\Http\Controllers\Admin\ComicController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ComicDetailController;
@@ -38,9 +39,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         return redirect()->route('admin.dashboard');
     });
 
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('comics', ComicController::class);
 
