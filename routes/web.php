@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\ComicDetailController;
+use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReaderController;
@@ -35,6 +36,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/bookmarks', [BookmarkController::class, 'index'])->name('bookmarks.index');
     Route::post('/bookmarks/{comic}', [BookmarkController::class, 'store'])->name('bookmarks.store');
     Route::delete('/bookmarks/{comic}', [BookmarkController::class, 'destroy'])->name('bookmarks.destroy');
+
+    Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
