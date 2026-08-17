@@ -10,8 +10,46 @@
 
     <p><a href="{{ route('admin.dashboard') }}">Back to dashboard</a></p>
 
+    {{-- Search and Filter Form --}}
+    <form method="GET" action="{{ route('admin.users.index') }}" style="margin-bottom: 20px;">
+        <fieldset>
+            <legend>Search Users</legend>
+            
+            <div>
+                <label for="search">Search by Name or Email</label>
+                <input 
+                    type="search" 
+                    name="search" 
+                    id="search" 
+                    value="{{ old('search', $search) }}" 
+                    placeholder="Search by name or email..."
+                >
+            </div>
+
+            <div>
+                <label for="role">Role</label>
+                <select name="role" id="role">
+                    <option value="">All Roles</option>
+                    <option value="user" @if(old('role', $role) === 'user') selected @endif>User</option>
+                    <option value="admin" @if(old('role', $role) === 'admin') selected @endif>Admin</option>
+                </select>
+            </div>
+
+            <button type="submit">Search</button>
+            @if($search || $role)
+                <a href="{{ route('admin.users.index') }}">Clear</a>
+            @endif
+        </fieldset>
+    </form>
+
+    {{-- Empty State --}}
     @if ($users->isEmpty())
-        <p>No users found.</p>
+        @if ($search || $role)
+            <p>No users match your search criteria.</p>
+            <a href="{{ route('admin.users.index') }}">Clear filters</a>
+        @else
+            <p>No users found.</p>
+        @endif
     @else
         <table>
             <thead>

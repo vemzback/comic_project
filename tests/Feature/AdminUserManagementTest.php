@@ -251,4 +251,332 @@ class AdminUserManagementTest extends TestCase
             ->get(route('admin.users.show', ['user' => 99999]))
             ->assertNotFound();
     }
+
+    // ======================================================================
+    // Phase 5D-2B: Search Tests
+    // ======================================================================
+
+    public function test_admin_can_search_users_by_name(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $alice = User::factory()->create([
+            'role' => 'user',
+            'name' => 'Alice Reader',
+            'email' => 'alice@example.com',
+        ]);
+        $bob = User::factory()->create([
+            'role' => 'user',
+            'name' => 'Bob Writer',
+            'email' => 'bob@example.com',
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin/users?search=Alice');
+
+        $response->assertOk();
+        $response->assertSee('Alice Reader');
+        $response->assertDontSee('Bob Writer');
+    }
+
+    public function test_admin_can_search_users_by_email(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $user1 = User::factory()->create([
+            'role' => 'user',
+            'name' => 'Alice Reader',
+            'email' => 'alice@example.com',
+        ]);
+        $user2 = User::factory()->create([
+            'role' => 'user',
+            'name' => 'Bob Writer',
+            'email' => 'bob@example.com',
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin/users?search=alice@');
+
+        $response->assertOk();
+        $response->assertSee('Alice Reader');
+        $response->assertDontSee('Bob Writer');
+    }
+
+    public function test_admin_search_is_case_insensitive(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $user = User::factory()->create([
+            'role' => 'user',
+            'name' => 'Alice Reader',
+            'email' => 'alice@example.com',
+        ]);
+
+        $responseUppercase = $this->actingAs($admin)->get('/admin/users?search=ALICE');
+        $responseLowercase = $this->actingAs($admin)->get('/admin/users?search=alice');
+        $responseMixed = $this->actingAs($admin)->get('/admin/users?search=AlIcE');
+
+        $responseUppercase->assertSee('Alice Reader');
+        $responseLowercase->assertSee('Alice Reader');
+        $responseMixed->assertSee('Alice Reader');
+    }
+
+    public function test_admin_search_is_partial_match(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $user = User::factory()->create([
+            'role' => 'user',
+            'name' => 'Alice Reader',
+            'email' => 'alice@example.com',
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin/users?search=ali');
+
+        $response->assertOk();
+        $response->assertSee('Alice Reader');
+    }
+
+    public function test_admin_search_excludes_nonmatching_users(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $matching = User::factory()->create([
+            'role' => 'user',
+            'name' => 'Alice Reader',
+            'email' => 'alice@example.com',
+        ]);
+        $nonMatching = User::factory()->create([
+            'role' => 'user',
+            'name' => 'Charlie Developer',
+            'email' => 'charlie@example.com',
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin/users?search=alice');
+
+        $response->assertOk();
+        $response->assertSee('Alice Reader');
+        $response->assertDontSee('Charlie Developer');
+    }
+
+    public function test_admin_empty_search_shows_all_users(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $user1 = User::factory()->create(['role' => 'user', 'name' => 'Alice']);
+        $user2 = User::factory()->create(['role' => 'user', 'name' => 'Bob']);
+
+        $response = $this->actingAs($admin)->get('/admin/users?search=');
+
+        $response->assertOk();
+        $response->assertSee('Alice');
+        $response->assertSee('Bob');
+    }
+
+    public function test_admin_no_search_param_shows_all_users(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $user1 = User::factory()->create(['role' => 'user', 'name' => 'Alice']);
+        $user2 = User::factory()->create(['role' => 'user', 'name' => 'Bob']);
+
+        $response = $this->actingAs($admin)->get('/admin/users');
+
+        $response->assertOk();
+        $response->assertSee('Alice');
+        $response->assertSee('Bob');
+    }
+
+    // ======================================================================
+    // Phase 5D-2B: Role Filter Tests
+    // ======================================================================
+
+    public function test_admin_can_filter_users_by_role_user(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $regularUser = User::factory()->create(['role' => 'user', 'name' => 'Alice User']);
+        $anotherAdmin = User::factory()->create(['role' => 'admin', 'name' => 'Bob Admin']);
+
+        $response = $this->actingAs($admin)->get('/admin/users?role=user');
+
+        $response->assertOk();
+        $response->assertSee('Alice User');
+        $response->assertDontSee('Bob Admin');
+    }
+
+    public function test_admin_can_filter_users_by_role_admin(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $regularUser = User::factory()->create(['role' => 'user', 'name' => 'Alice User']);
+        $anotherAdmin = User::factory()->create(['role' => 'admin', 'name' => 'Bob Admin']);
+
+        $response = $this->actingAs($admin)->get('/admin/users?role=admin');
+
+        $response->assertOk();
+        $response->assertSee('Bob Admin');
+        // Admin user viewing may see themselves, but regular user should not be in results
+        $this->assertCount(2, $response->original['users']); // admin + anotherAdmin
+    }
+
+    public function test_admin_empty_role_filter_shows_all_roles(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $regularUser = User::factory()->create(['role' => 'user', 'name' => 'Alice']);
+        $anotherAdmin = User::factory()->create(['role' => 'admin', 'name' => 'Bob']);
+
+        $response = $this->actingAs($admin)->get('/admin/users?role=');
+
+        $response->assertOk();
+        $response->assertSee('Alice');
+        $response->assertSee('Bob');
+    }
+
+    public function test_admin_no_role_param_shows_all_roles(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $regularUser = User::factory()->create(['role' => 'user', 'name' => 'Alice']);
+        $anotherAdmin = User::factory()->create(['role' => 'admin', 'name' => 'Bob']);
+
+        $response = $this->actingAs($admin)->get('/admin/users');
+
+        $response->assertOk();
+        $response->assertSee('Alice');
+        $response->assertSee('Bob');
+    }
+
+    public function test_admin_invalid_role_filter_is_ignored(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $user1 = User::factory()->create(['role' => 'user', 'name' => 'Alice']);
+        $user2 = User::factory()->create(['role' => 'admin', 'name' => 'Bob']);
+
+        // Invalid role should be ignored, showing all users
+        $response = $this->actingAs($admin)->get('/admin/users?role=superuser');
+
+        $response->assertOk();
+        $response->assertSee('Alice');
+        $response->assertSee('Bob');
+    }
+
+    // ======================================================================
+    // Phase 5D-2B: Combined Search + Filter Tests
+    // ======================================================================
+
+    public function test_admin_search_and_role_filter_work_together(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $aliceUser = User::factory()->create([
+            'role' => 'user',
+            'name' => 'Alice Reader',
+            'email' => 'alice@example.com',
+        ]);
+        $aliceAdmin = User::factory()->create([
+            'role' => 'admin',
+            'name' => 'Alice Admin',
+            'email' => 'alice.admin@example.com',
+        ]);
+        $bobUser = User::factory()->create([
+            'role' => 'user',
+            'name' => 'Bob Writer',
+            'email' => 'bob@example.com',
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin/users?search=alice&role=user');
+
+        $response->assertOk();
+        $response->assertSee('Alice Reader');
+        $response->assertDontSee('Alice Admin');
+        $response->assertDontSee('Bob Writer');
+    }
+
+    public function test_admin_search_and_role_filter_return_empty_when_no_matches(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $user = User::factory()->create([
+            'role' => 'user',
+            'name' => 'Bob Writer',
+            'email' => 'bob@example.com',
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin/users?search=alice&role=admin');
+
+        $response->assertOk();
+        $response->assertSee('No users match your search criteria');
+    }
+
+    // ======================================================================
+    // Phase 5D-2B: Pagination Tests
+    // ======================================================================
+
+    public function test_admin_search_parameters_preserved_on_pagination(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        // Create 15 users with similar names to trigger pagination, using factory's unique email generation
+        for ($i = 0; $i < 15; $i++) {
+            User::factory()->create([
+                'role' => 'user',
+                'name' => 'Alice User ' . $i,
+            ]);
+        }
+
+        $response = $this->actingAs($admin)->get('/admin/users?search=alice&page=2');
+
+        $response->assertOk();
+        // Check that the pagination links preserve the search parameter
+        $html = $response->getContent();
+        $this->assertStringContainsString('search=alice', $html);
+    }
+
+    public function test_admin_role_filter_preserved_on_pagination(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        User::factory()->count(15)->create(['role' => 'user']);
+
+        $response = $this->actingAs($admin)->get('/admin/users?role=user&page=2');
+
+        $response->assertOk();
+        // Check that the pagination links preserve the role parameter
+        $html = $response->getContent();
+        $this->assertStringContainsString('role=user', $html);
+    }
+
+    public function test_admin_both_params_preserved_on_pagination(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        User::factory()->count(15)->create([
+            'role' => 'user',
+            'name' => 'Alice User',
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin/users?search=alice&role=user&page=2');
+
+        $response->assertOk();
+        $html = $response->getContent();
+        $this->assertStringContainsString('search=alice', $html);
+        $this->assertStringContainsString('role=user', $html);
+    }
+
+    // ======================================================================
+    // Phase 5D-2B: Empty State Tests
+    // ======================================================================
+
+    public function test_admin_displays_different_empty_message_for_filtered_results(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $user = User::factory()->create(['role' => 'user', 'name' => 'Bob']);
+
+        $response = $this->actingAs($admin)->get('/admin/users?search=alice');
+
+        $response->assertOk();
+        $response->assertSee('No users match your search criteria');
+    }
+
+    // ======================================================================
+    // Phase 5D-2B: Authorization Regression Tests
+    // ======================================================================
+
+    public function test_guest_cannot_search_users(): void
+    {
+        $this->get('/admin/users?search=alice')->assertRedirect('/login');
+    }
+
+    public function test_regular_user_cannot_search_users(): void
+    {
+        $user = User::factory()->create(['role' => 'user']);
+
+        $this->actingAs($user)
+            ->get('/admin/users?search=alice')
+            ->assertForbidden();
+    }
 }
