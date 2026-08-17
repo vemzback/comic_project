@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -14,14 +14,14 @@
     <form method="GET" action="{{ route('admin.users.index') }}" style="margin-bottom: 20px;">
         <fieldset>
             <legend>Search Users</legend>
-            
+
             <div>
                 <label for="search">Search by Name or Email</label>
-                <input 
-                    type="search" 
-                    name="search" 
-                    id="search" 
-                    value="{{ old('search', $search) }}" 
+                <input
+                    type="search"
+                    name="search"
+                    id="search"
+                    value="{{ old('search', $search) }}"
                     placeholder="Search by name or email..."
                 >
             </div>
@@ -82,3 +82,4 @@
     @endif
 </body>
 </html>
+
