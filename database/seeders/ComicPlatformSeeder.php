@@ -21,6 +21,10 @@ class ComicPlatformSeeder extends Seeder
      */
     public function run(): void
     {
+        if (app()->environment('production')) {
+            throw new \RuntimeException('Demo seeding is disabled in production.');
+        }
+
         $admin = User::updateOrCreate(
             ['email' => 'admin@comic.test'],
             [

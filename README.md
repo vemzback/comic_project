@@ -7,6 +7,27 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Production Safety
+
+Before deploying, configure the production environment separately from this local development template:
+
+```text
+APP_ENV=production
+APP_DEBUG=false
+APP_KEY=<secure deployment secret>
+APP_URL=https://your-domain
+SESSION_SECURE_COOKIE=true
+```
+
+Production requirements:
+
+- Enforce HTTPS at the web server or reverse proxy.
+- Configure database credentials securely.
+- Never commit `.env` or other secrets.
+- Do not use the demo seeders for production provisioning. `ComicPlatformSeeder` refuses to run in production.
+- Do not regenerate `APP_KEY` after deployment without understanding the effect on encrypted data and sessions.
+- Review production mail, logging, cache, queue, and filesystem settings before serving traffic.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
