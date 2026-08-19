@@ -28,6 +28,60 @@ Production requirements:
 - Do not regenerate `APP_KEY` after deployment without understanding the effect on encrypted data and sessions.
 - Review production mail, logging, cache, queue, and filesystem settings before serving traffic.
 
+## Production Deployment
+
+Run the deployment steps in this order:
+
+1. Install production PHP dependencies:
+
+	```text
+	composer install --no-dev --optimize-autoloader
+	```
+
+2. Configure the production environment securely. Use `APP_ENV=production`, `APP_DEBUG=false`, a configured `APP_KEY`, an HTTPS `APP_URL`, `SESSION_SECURE_COOKIE=true`, and valid production database credentials.
+
+3. Install and build frontend assets:
+
+	```text
+	npm ci
+	npm run build
+	```
+
+4. Run database migrations:
+
+	```text
+	php artisan migrate --force
+	```
+
+	Do not run the demo seeders for production provisioning. Hardening A blocks `ComicPlatformSeeder` in production.
+
+5. Configure public storage:
+
+	```text
+	php artisan storage:link
+	```
+
+	Comic covers and page images use Laravel's public storage disk and require this link or an equivalent persistent production storage arrangement.
+
+6. Ensure the web/PHP process has appropriate write access to:
+
+	```text
+	storage/
+	bootstrap/cache/
+	```
+
+	Do not use insecure permissions such as `chmod 777`.
+
+7. Optimize Laravel:
+
+	```text
+	php artisan optimize
+	```
+
+	This repository has been verified compatible with route, configuration, view, and event caching through this command. `php artisan optimize:clear` may require database connectivity when `CACHE_STORE=database`.
+
+8. Verify that the application loads, database connectivity works, login and admin access work, storage media URLs resolve, and production debug mode is disabled.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
