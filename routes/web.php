@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ChapterController;
 use App\Http\Controllers\Admin\ComicController;
+use App\Http\Controllers\Admin\CommentController as AdminCommentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\UserController;
@@ -64,6 +65,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->middleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class)
         ->name('users.role.update');
     Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
+
+    Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments.index');
+    Route::patch('/comments/{comment}/approval', [AdminCommentController::class, 'updateApproval'])->name('comments.approval.update');
+    Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
 
     Route::resource('comics', ComicController::class);
 
