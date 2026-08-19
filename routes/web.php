@@ -60,6 +60,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::put('/users/{user}/role', [UserController::class, 'updateRole'])
+        ->middleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class)
+        ->name('users.role.update');
     Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
 
     Route::resource('comics', ComicController::class);

@@ -4,7 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class UserController extends Controller
@@ -48,5 +52,41 @@ class UserController extends Controller
         ]);
 
         return view('admin.users.show', compact('user'));
+    }
+
+    public function updateRole(Request $request, User $user): RedirectResponse
+    {
+        $validated = $request->validate([
+            'role' => ['required', 'string', 'in:user,admin'],
+        ]);
+
+        if ((int) Auth::id() === (int) $user->id) {
+            abort(403);
+        }
+
+        if ($user->role === $validated['role']) {
+            return redirect()->route('admin.users.index')->with('status', 'User role is unchanged.');
+        }
+
+        DB::transaction(function () use ($user, $validated): void {
+            if ($user->role === 'admin' && $validated['role'] === 'user') {
+                $admins = User::query()
+                    ->where('role', 'admin')
+                    ->lockForUpdate()
+                    ->get();
+
+                if ($admins->count() <= 1) {
+                    throw ValidationException::withMessages([
+                        'role' => 'The final administrator cannot be demoted.',
+                    ]);
+                }
+            }
+
+            $user->update([
+                'role' => $validated['role'],
+            ]);
+        });
+
+        return redirect()->route('admin.users.index')->with('status', 'User role updated successfully.');
     }
 }

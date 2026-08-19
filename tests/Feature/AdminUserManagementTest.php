@@ -579,4 +579,191 @@ class AdminUserManagementTest extends TestCase
             ->get('/admin/users?search=alice')
             ->assertForbidden();
     }
+
+    // ======================================================================
+    // Phase 5D-2C: Role Management Tests
+    // ======================================================================
+
+    public function test_guest_cannot_update_user_role(): void
+    {
+        $user = User::factory()->create(['role' => 'user']);
+
+        $this->put("/admin/users/{$user->id}/role", [
+            'role' => 'admin',
+        ])->assertRedirect('/login');
+    }
+
+    public function test_regular_user_cannot_update_another_users_role(): void
+    {
+        $actor = User::factory()->create(['role' => 'user']);
+        $target = User::factory()->create(['role' => 'user']);
+
+        $this->actingAs($actor)
+            ->put("/admin/users/{$target->id}/role", [
+                'role' => 'admin',
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('users', [
+            'id' => $target->id,
+            'role' => 'user',
+        ]);
+    }
+
+    public function test_admin_can_promote_normal_user_to_admin(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $target = User::factory()->create(['role' => 'user']);
+
+        $this->actingAs($admin)
+            ->put("/admin/users/{$target->id}/role", [
+                'role' => 'admin',
+            ])
+            ->assertRedirect(route('admin.users.index'));
+
+        $this->assertDatabaseHas('users', [
+            'id' => $target->id,
+            'role' => 'admin',
+        ]);
+    }
+
+    public function test_promoted_user_gains_admin_access(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $target = User::factory()->create(['role' => 'user']);
+
+        $this->actingAs($admin)
+            ->put("/admin/users/{$target->id}/role", [
+                'role' => 'admin',
+            ]);
+
+        $this->actingAs($target->fresh())
+            ->get('/admin/dashboard')
+            ->assertOk();
+    }
+
+    public function test_admin_can_demote_another_admin_when_another_admin_remains(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $target = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)
+            ->put("/admin/users/{$target->id}/role", [
+                'role' => 'user',
+            ])
+            ->assertRedirect(route('admin.users.index'));
+
+        $this->assertDatabaseHas('users', [
+            'id' => $target->id,
+            'role' => 'user',
+        ]);
+        $this->assertDatabaseHas('users', [
+            'id' => $admin->id,
+            'role' => 'admin',
+        ]);
+    }
+
+    public function test_demoted_admin_loses_admin_access(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $target = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)
+            ->put("/admin/users/{$target->id}/role", [
+                'role' => 'user',
+            ]);
+
+        $this->actingAs($target->fresh())
+            ->get('/admin/dashboard')
+            ->assertForbidden();
+    }
+
+    public function test_admin_cannot_demote_themselves(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)
+            ->put("/admin/users/{$admin->id}/role", [
+                'role' => 'user',
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('users', [
+            'id' => $admin->id,
+            'role' => 'admin',
+        ]);
+    }
+
+    public function test_missing_role_is_rejected(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $target = User::factory()->create(['role' => 'user']);
+
+        $this->actingAs($admin)
+            ->from(route('admin.users.show', $target))
+            ->put("/admin/users/{$target->id}/role")
+            ->assertSessionHasErrors(['role']);
+
+        $this->assertDatabaseHas('users', [
+            'id' => $target->id,
+            'role' => 'user',
+        ]);
+    }
+
+    public function test_invalid_roles_are_rejected(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $target = User::factory()->create(['role' => 'user']);
+
+        foreach (['superuser', 'moderator', 'owner'] as $invalidRole) {
+            $this->actingAs($admin)
+                ->from(route('admin.users.show', $target))
+                ->put("/admin/users/{$target->id}/role", [
+                    'role' => $invalidRole,
+                ])
+                ->assertSessionHasErrors(['role']);
+
+            $this->assertDatabaseHas('users', [
+                'id' => $target->id,
+                'role' => 'user',
+            ]);
+        }
+    }
+
+    public function test_role_update_changes_only_target_user(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $target = User::factory()->create(['role' => 'user']);
+        $otherUser = User::factory()->create(['role' => 'user']);
+
+        $this->actingAs($admin)
+            ->put("/admin/users/{$target->id}/role", [
+                'role' => 'admin',
+            ]);
+
+        $this->assertDatabaseHas('users', [
+            'id' => $target->id,
+            'role' => 'admin',
+        ]);
+        $this->assertDatabaseHas('users', [
+            'id' => $otherUser->id,
+            'role' => 'user',
+        ]);
+        $this->assertDatabaseHas('users', [
+            'id' => $admin->id,
+            'role' => 'admin',
+        ]);
+    }
+
+    public function test_role_update_requires_csrf_protection(): void
+    {
+        $route = $this->app->make(\Illuminate\Routing\Router::class)
+            ->getRoutes()
+            ->getByName('admin.users.role.update');
+
+        $this->assertContains(
+            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+            $route->gatherMiddleware(),
+        );
+    }
 }
