@@ -82,6 +82,28 @@ Run the deployment steps in this order:
 
 8. Verify that the application loads, database connectivity works, login and admin access work, storage media URLs resolve, and production debug mode is disabled.
 
+## Nginx / HTTPS Deployment
+
+The parameterized Nginx deployment template is available at:
+
+```text
+deploy/nginx/comic-platform.conf.example
+```
+
+Before enabling it, replace these placeholders with deployment-specific values:
+
+- `<DOMAIN>`: canonical HTTPS hostname
+- `<PROJECT_PUBLIC_PATH>`: absolute path to this project's `public/` directory
+- `<PHP_FPM_ENDPOINT>`: PHP-FPM socket or TCP endpoint
+- `<TLS_CERTIFICATE_PATH>`: certificate path
+- `<TLS_PRIVATE_KEY_PATH>`: private key path
+
+The Nginx document root must remain the project's `public/` directory. The template handles the HTTP-to-HTTPS redirect, Laravel front-controller fallback, PHP-FPM routing, hidden-file protection, ACME challenge paths, and a 3 MB request limit for the application's 2 MB image validation limit. It does not enable HSTS or duplicate Laravel response headers.
+
+For production, use `APP_URL=https://<DOMAIN>`, `SESSION_SECURE_COOKIE=true`, and `APP_DEBUG=false`. Run `php artisan storage:link` so `public/storage` points to `storage/app/public`; keep `storage/` and `bootstrap/cache/` writable by PHP-FPM without making `public/` or the repository world-writable. PHP `upload_max_filesize` and `post_max_size` must allow the 2 MB application limit plus multipart overhead.
+
+The current v1.0 feature set does not require a queue worker, scheduler, or SMTP service. Enable HSTS only after HTTPS, the canonical domain, and certificate renewal have been verified stable; do not enable `includeSubDomains` or `preload` in this phase.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
