@@ -141,7 +141,7 @@ class PasswordChangeTest extends TestCase
         $this->assertNotSame($plainNewPassword, $user->password);
     }
 
-    public function test_password_change_requires_csrf_protection(): void
+    public function test_password_change_form_contains_csrf_token(): void
     {
         $user = User::factory()->create([
             'password' => Hash::make('CurrentPassword123!'),
@@ -149,16 +149,9 @@ class PasswordChangeTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
-            ->post('/profile/password', [
-                'current_password' => 'CurrentPassword123!',
-                'password' => 'NewPassword123!',
-                'password_confirmation' => 'NewPassword123!',
-            ]);
-
-        // This test documents that CSRF is required
-        // Under normal circumstances, this request would be rejected at middleware level
-        // The assertion here is that a normal request WITHOUT withoutMiddleware() would be rejected
+            ->get('/profile/password')
+            ->assertOk()
+            ->assertSee('name="_token"', false);
     }
 
     public function test_user_can_login_with_new_password_after_change(): void
