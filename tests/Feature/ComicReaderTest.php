@@ -29,7 +29,11 @@ class ComicReaderTest extends TestCase
     public function test_comic_detail_displays_chapters(): void
     {
         $comic = Comic::factory()->has(
-            Chapter::factory(3)->state(['is_published' => true])
+            Chapter::factory(3)
+                ->sequence(fn ($sequence) => [
+                    'chapter_number' => $sequence->index + 1,
+                ])
+                ->state(['is_published' => true])
         )->create(['published_at' => now()]);
 
         $response = $this->get(route('comic.detail', $comic));
@@ -43,9 +47,9 @@ class ComicReaderTest extends TestCase
     public function test_comic_detail_only_shows_published_chapters(): void
     {
         $comic = Comic::factory()->has(
-            Chapter::factory()->state(['is_published' => true])
+            Chapter::factory()->state(['chapter_number' => 1, 'is_published' => true])
         )->has(
-            Chapter::factory()->state(['is_published' => false])
+            Chapter::factory()->state(['chapter_number' => 2, 'is_published' => false])
         )->create(['published_at' => now()]);
 
         $response = $this->get(route('comic.detail', $comic));

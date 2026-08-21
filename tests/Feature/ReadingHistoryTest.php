@@ -28,6 +28,7 @@ class ReadingHistoryTest extends TestCase
         
         $this->chapter = Chapter::factory()->create([
             'comic_id' => $this->comic->id,
+            'chapter_number' => 1,
             'is_published' => true,
         ]);
 
@@ -280,6 +281,7 @@ class ReadingHistoryTest extends TestCase
     {
         $unpublishedChapter = Chapter::factory()->create([
             'comic_id' => $this->comic->id,
+            'chapter_number' => 2,
             'is_published' => false,
         ]);
 

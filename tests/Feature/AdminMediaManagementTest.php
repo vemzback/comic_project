@@ -147,7 +147,10 @@ class AdminMediaManagementTest extends TestCase
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $comic = Comic::factory()->create();
-        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $chapter = Chapter::factory()->create([
+            'comic_id' => $comic->id,
+            'chapter_number' => 1,
+        ]);
 
         $response = $this->actingAs($admin)->post("/admin/comics/{$comic->id}/chapters/{$chapter->id}/pages", [
             'page_number' => 1,
@@ -223,7 +226,10 @@ class AdminMediaManagementTest extends TestCase
         $this->assertDatabaseMissing('pages', ['id' => $page->id]);
         Storage::disk('public')->assertMissing('chapters/pages/delete-me.jpg');
 
-        $secondChapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $secondChapter = Chapter::factory()->create([
+            'comic_id' => $comic->id,
+            'chapter_number' => 2,
+        ]);
         $secondPage = Page::factory()->create([
             'chapter_id' => $secondChapter->id,
             'page_number' => 1,
@@ -245,11 +251,13 @@ class AdminMediaManagementTest extends TestCase
         $comic = Comic::factory()->create(['published_at' => now(), 'status' => 'ongoing']);
         $publishedChapter = Chapter::factory()->create([
             'comic_id' => $comic->id,
+            'chapter_number' => 1,
             'is_published' => true,
             'published_at' => now(),
         ]);
         $draftChapter = Chapter::factory()->create([
             'comic_id' => $comic->id,
+            'chapter_number' => 2,
             'is_published' => false,
             'published_at' => now(),
         ]);
