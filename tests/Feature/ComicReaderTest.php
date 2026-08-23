@@ -7,6 +7,7 @@ use App\Models\Comic;
 use App\Models\Genre;
 use App\Models\Page;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ComicReaderTest extends TestCase
@@ -24,6 +25,19 @@ class ComicReaderTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee($comic->title);
         $response->assertViewHas('comic', $comic);
+    }
+
+    public function test_missing_comic_cover_uses_local_placeholder(): void
+    {
+        $comic = Comic::factory()->create([
+            'published_at' => now(),
+            'cover_image' => 'covers/missing-cover.jpg',
+        ]);
+
+        $this->get(route('comic.detail', $comic))
+            ->assertOk()
+            ->assertSee(asset('images/media-placeholder.svg'), false)
+            ->assertDontSee('https://placehold.co');
     }
 
     public function test_comic_detail_displays_chapters(): void
@@ -257,11 +271,31 @@ class ComicReaderTest extends TestCase
             'page_number' => 1,
             'image_path' => 'pages/test-comic/chapter-1/page-001.jpg',
         ]);
+        Storage::disk('public')->put('pages/test-comic/chapter-1/page-001.jpg', 'page image');
 
         $response = $this->get(route('chapter.reader', ['comic' => $comic, 'chapter' => $chapter]));
 
         $response->assertStatus(200);
         $response->assertSee('pages/test-comic/chapter-1/page-001.jpg');
+    }
+
+    public function test_missing_page_image_uses_local_placeholder(): void
+    {
+        $comic = Comic::factory()->create(['published_at' => now()]);
+        $chapter = Chapter::factory()->create([
+            'comic_id' => $comic->id,
+            'is_published' => true,
+        ]);
+
+        Page::create([
+            'chapter_id' => $chapter->id,
+            'page_number' => 1,
+            'image_path' => 'pages/missing/page-001.jpg',
+        ]);
+
+        $this->get(route('chapter.reader', ['comic' => $comic, 'chapter' => $chapter]))
+            ->assertOk()
+            ->assertSee(asset('images/media-placeholder.svg'), false);
     }
 
     public function test_search_results_include_comic_detail_links(): void

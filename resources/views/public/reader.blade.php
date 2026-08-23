@@ -23,8 +23,8 @@
                     @foreach ($pages as $page)
                         <div class="reader-page">
                             <figure class="page-figure">
-                                <img src="{{ Storage::disk('public')->url($page->image_path) }}" 
-                                     alt="{{ $page->title ?: 'Page ' . $page->page_number }}" 
+                                  <img src="{{ Storage::disk('public')->exists($page->image_path) ? Storage::disk('public')->url($page->image_path) : asset('images/media-placeholder.svg') }}"
+                                      alt="{{ Storage::disk('public')->exists($page->image_path) ? ($page->title ?: 'Page ' . $page->page_number) : ($page->title ?: 'Page ' . $page->page_number) . ' image unavailable' }}"
                                      class="page-image">
                                 @if ($page->title)
                                     <figcaption>{{ $page->title }}</figcaption>

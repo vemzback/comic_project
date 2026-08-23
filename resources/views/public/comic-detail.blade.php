@@ -17,8 +17,8 @@
         <div class="container comic-detail-grid">
             <div class="comic-cover-section">
                 <div class="comic-cover-detail">
-                    <img src="{{ $comic->cover_image ? Storage::disk('public')->url($comic->cover_image) : 'https://placehold.co/600x900/1f2937/ffffff?text=' . urlencode($comic->title) }}" 
-                         alt="{{ $comic->title }} cover" 
+                    <img src="{{ $comic->cover_image && Storage::disk('public')->exists($comic->cover_image) ? Storage::disk('public')->url($comic->cover_image) : asset('images/media-placeholder.svg') }}"
+                         alt="{{ $comic->cover_image && Storage::disk('public')->exists($comic->cover_image) ? $comic->title . ' cover' : $comic->title . ' cover unavailable' }}"
                          class="comic-cover-large">
                 </div>
                 <div class="comic-meta">

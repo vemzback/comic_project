@@ -25,7 +25,7 @@
                     @foreach ($results as $comic)
                         <a href="{{ route('comic.detail', $comic) }}" class="comic-card comic-card-link">
                             <div class="comic-cover-wrap">
-                                <img src="{{ $comic->cover_image ? Storage::disk('public')->url($comic->cover_image) : 'https://placehold.co/600x900/1f2937/ffffff?text=' . urlencode($comic->title) }}" alt="{{ $comic->title }} cover" class="comic-cover">
+                                <img src="{{ $comic->cover_image && Storage::disk('public')->exists($comic->cover_image) ? Storage::disk('public')->url($comic->cover_image) : asset('images/media-placeholder.svg') }}" alt="{{ $comic->cover_image && Storage::disk('public')->exists($comic->cover_image) ? $comic->title . ' cover' : $comic->title . ' cover unavailable' }}" class="comic-cover">
                             </div>
                             <div class="comic-body">
                                 <div class="meta-row">
