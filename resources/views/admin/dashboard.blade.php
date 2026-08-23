@@ -37,7 +37,7 @@
             <section style="background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:1.25rem;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                     <h2 style="margin:0; font-size:1.2rem;">Recent Users</h2>
-                    <a href="{{ route('admin.comics.index') }}" style="color:#1d4ed8; text-decoration:none;">View all</a>
+                    <a href="{{ route('admin.users.index') }}" style="color:#1d4ed8; text-decoration:none;">View all</a>
                 </div>
 
                 @if ($recentUsers->isEmpty())
