@@ -38,6 +38,34 @@ class AuthFlowTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    public function test_login_page_renders_shared_auth_form(): void
+    {
+        $this->get('/login')
+            ->assertOk()
+            ->assertSee('Comic Project')
+            ->assertSee('Welcome back')
+            ->assertSee('Sign in to continue reading')
+            ->assertSee('Email')
+            ->assertSee('Password')
+            ->assertSee('Sign In')
+            ->assertSee('Register');
+    }
+
+    public function test_register_page_renders_shared_auth_form(): void
+    {
+        $this->get('/register')
+            ->assertOk()
+            ->assertSee('Comic Project')
+            ->assertSee('Create your account')
+            ->assertSee('Start reading and saving comics')
+            ->assertSee('Name')
+            ->assertSee('Email')
+            ->assertSee('Password')
+            ->assertSee('Confirm Password')
+            ->assertSee('Create Account')
+            ->assertSee('Login');
+    }
+
     public function test_regular_user_can_login_and_redirect_to_home(): void
     {
         $user = User::factory()->create([

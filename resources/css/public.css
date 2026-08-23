@@ -451,6 +451,113 @@ input {
     border: none;
 }
 
+.auth-shell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 1rem 5rem;
+    min-height: calc(100vh - 160px);
+}
+
+.auth-card {
+    width: min(100%, 480px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    box-shadow: var(--shadow);
+    padding: 2.25rem 1.5rem 1.5rem;
+}
+
+.auth-header {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.auth-header .eyebrow {
+    margin-bottom: 0.75rem;
+}
+
+.auth-header h1 {
+    margin: 0;
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    line-height: 1.1;
+}
+
+.auth-header p:last-child {
+    margin: 0.75rem 0 0;
+    color: var(--muted);
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.form-label {
+    font-weight: 700;
+    color: var(--text);
+}
+
+.form-control {
+    width: 100%;
+    min-height: 48px;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--text);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: rgba(37, 99, 235, 0.6);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.form-error-box {
+    background: rgba(220, 38, 38, 0.06);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-error-list {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: var(--danger);
+}
+
+.form-error {
+    color: var(--danger);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.auth-submit {
+    width: 100%;
+    margin-top: 0.25rem;
+}
+
+.auth-footer {
+    margin: 1.25rem 0 0;
+    text-align: center;
+    color: var(--muted);
+}
+
+.auth-footer a {
+    color: var(--primary);
+    font-weight: 700;
+}
+
 .site-footer {
     background: var(--header);
     color: #fff;

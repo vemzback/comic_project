@@ -1,37 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Login</title>
-    </head>
-    <body>
-        <h1>Login</h1>
+@extends('layouts.app')
 
-        @if ($errors->any())
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        @endif
+@section('title', 'Login | Comic Project')
 
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
-
-            <div>
-                <label for="email">Email</label>
-                <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus>
+@section('content')
+    <div class="auth-shell">
+        <div class="auth-card">
+            <div class="auth-header">
+                <p class="eyebrow">Welcome back</p>
+                <h1>Sign in to continue reading</h1>
             </div>
 
-            <div>
-                <label for="password">Password</label>
-                <input id="password" type="password" name="password" required>
-            </div>
+            @if ($errors->any())
+                <div class="form-error-box" role="alert">
+                    <ul class="form-error-list">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
-            <button type="submit">Login</button>
-        </form>
+            <form method="POST" action="{{ route('login') }}" class="auth-form">
+                @csrf
 
-        <p>Need an account? <a href="{{ route('register') }}">Register</a></p>
-    </body>
-</html>
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input id="email" type="email" name="email" value="{{ old('email') }}" class="form-control" autocomplete="email" required autofocus>
+                    @error('email')
+                        <span class="form-error" role="alert">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input id="password" type="password" name="password" class="form-control" autocomplete="current-password" required>
+                    @error('password')
+                        <span class="form-error" role="alert">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <button type="submit" class="btn btn-primary auth-submit">Sign In</button>
+            </form>
+
+            <p class="auth-footer">
+                Need an account?
+                <a href="{{ route('register') }}">Register</a>
+            </p>
+        </div>
+    </div>
+@endsection
