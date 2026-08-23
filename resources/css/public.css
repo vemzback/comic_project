@@ -805,6 +805,23 @@ input {
     color: #374151;
 }
 
+.status-approved {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.admin-comment-body {
+    min-width: 260px;
+    max-width: 420px;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+}
+
 .admin-detail-layout {
     display: grid;
     gap: 1.5rem;
