@@ -1378,7 +1378,209 @@ input {
     justify-self: center;
 }
 
+/* Mobile Menu Toggle Button */
+.menu-toggle {
+    display: none;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 0.5rem;
+    width: 44px;
+    height: 44px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.menu-toggle:hover,
+.menu-toggle:focus-visible {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.menu-toggle:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+/* Hamburger Icon */
+.menu-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 24px;
+    height: 18px;
+}
+
+.hamburger-line {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: #fff;
+    border-radius: 1px;
+    transition: transform 0.3s ease, opacity 0.3s ease, background 0.3s ease;
+    transform-origin: center;
+}
+
+/* Animated icon states */
+.menu-toggle[aria-expanded="true"] .hamburger-top {
+    transform: translateY(10px) rotate(45deg);
+}
+
+.menu-toggle[aria-expanded="true"] .hamburger-middle {
+    opacity: 0;
+}
+
+.menu-toggle[aria-expanded="true"] .hamburger-bottom {
+    transform: translateY(-10px) rotate(-45deg);
+}
+
+/* Mobile Menu Container */
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-grow: 1;
+}
+
 @media (max-width: 768px) {
+    /* Mobile Navigation Layout */
+    .menu-toggle {
+        display: flex;
+        order: 2;
+        margin-left: auto;
+    }
+
+    .nav-wrap {
+        flex-wrap: nowrap;
+        gap: 0.5rem;
+        min-height: 56px;
+    }
+
+    .brand {
+        order: 1;
+        flex-shrink: 0;
+    }
+
+    .nav-menu {
+        position: absolute;
+        top: 56px;
+        left: 0;
+        right: 0;
+        background: var(--header);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+        z-index: 10;
+    }
+
+    .nav-menu[data-open="true"] {
+        max-height: 500px;
+    }
+
+    /* Primary Navigation Links */
+    .main-nav {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 0.25rem 0;
+    }
+
+    .main-nav a {
+        padding: 0.6rem 1rem;
+        display: block;
+        border: none;
+        background: none;
+        text-align: left;
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.95rem;
+    }
+
+    .main-nav a:hover,
+    .main-nav a:focus-visible {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+
+    /* Account/Action Area */
+    .nav-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 0.25rem;
+        padding: 0.25rem 0;
+        margin-left: 0;
+    }
+
+    /* Logout and other buttons */
+    .nav-actions .btn,
+    .nav-actions .inline-form .btn {
+        width: 100%;
+        justify-content: flex-start;
+        padding: 0.6rem 1rem;
+        font-size: 0.95rem;
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.85);
+        text-align: left;
+    }
+
+    .nav-actions .btn:hover,
+    .nav-actions .inline-form .btn:hover,
+    .nav-actions .btn:focus-visible,
+    .nav-actions .inline-form .btn:focus-visible {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+
+    .nav-actions .btn-primary {
+        background: var(--primary);
+        color: #fff;
+    }
+
+    .nav-actions .btn-primary:hover,
+    .nav-actions .btn-primary:focus-visible {
+        background: var(--primary-dark);
+    }
+
+    .nav-actions .btn-danger {
+        background: none;
+        color: rgba(255, 255, 255, 0.85);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 0;
+        margin-top: 0.25rem;
+        padding-top: 0.65rem;
+        padding-bottom: 0.65rem;
+    }
+
+    .nav-actions .btn-danger:hover,
+    .nav-actions .btn-danger:focus-visible {
+        background: rgba(220, 38, 38, 0.15);
+        color: #fca5a5;
+    }
+
+    .nav-actions .inline-form {
+        width: 100%;
+    }
+
+    .site-header .btn-ghost {
+        text-align: left;
+        justify-content: flex-start;
+    }
+
+    /* Preserve existing responsive styles for content */
     .hero-grid,
     .three-up,
     .four-up,
@@ -1386,7 +1588,6 @@ input {
         grid-template-columns: 1fr;
     }
 
-    .nav-wrap,
     .footer-wrap,
     .chapter-item,
     .section-heading {
@@ -1394,14 +1595,8 @@ input {
         align-items: flex-start;
     }
 
-    .main-nav,
-    .nav-actions,
     .hero-actions {
         width: 100%;
-    }
-
-    .nav-actions {
-        margin-left: 0;
     }
 
     .account-actions {
@@ -1410,6 +1605,10 @@ input {
     }
 
     .admin-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-form-grid {
         grid-template-columns: 1fr;
     }
 
@@ -1439,5 +1638,49 @@ input {
     .nav-btn.prev-btn:hover:not(.disabled),
     .nav-btn.next-btn:hover:not(.disabled) {
         transform: none;
+    }
+}
+
+@media (max-width: 390px) {
+    .nav-wrap {
+        min-height: 52px;
+        gap: 0.3rem;
+    }
+
+    .brand {
+        font-size: 1.12rem;
+    }
+
+    .menu-toggle {
+        width: 40px;
+        height: 40px;
+        padding: 0.4rem;
+    }
+
+    .menu-icon {
+        width: 20px;
+        height: 16px;
+        gap: 3px;
+    }
+
+    .hamburger-line {
+        width: 20px;
+        height: 2px;
+    }
+
+    .main-nav a {
+        padding: 0.55rem 0.9rem;
+        font-size: 0.92rem;
+    }
+
+    .nav-actions .btn,
+    .nav-actions .inline-form .btn {
+        padding: 0.55rem 0.9rem;
+        font-size: 0.92rem;
+    }
+
+    .nav-actions .btn-danger {
+        padding-top: 0.6rem;
+        padding-bottom: 0.6rem;
     }
 }

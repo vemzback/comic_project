@@ -12,31 +12,41 @@
             <div class="container nav-wrap">
                 <a href="{{ route('home') }}" class="brand">Comic Project</a>
 
-                <nav class="main-nav" aria-label="Main navigation">
-                    <a href="{{ route('home') }}">Home</a>
-                    <a href="{{ route('comics') }}">Comics</a>
-                    <a href="{{ route('genres') }}">Genres</a>
-                    <a href="{{ route('search') }}">Search</a>
-                </nav>
+                <button class="menu-toggle" aria-expanded="false" aria-controls="site-menu" aria-label="Toggle navigation menu">
+                    <span class="menu-icon">
+                        <span class="hamburger-line hamburger-top"></span>
+                        <span class="hamburger-line hamburger-middle"></span>
+                        <span class="hamburger-line hamburger-bottom"></span>
+                    </span>
+                </button>
 
-                <div class="nav-actions">
-                    @guest
-                        <a href="{{ route('login') }}" class="btn btn-ghost">Login</a>
-                        <a href="{{ route('register') }}" class="btn btn-primary">Register</a>
-                    @else
-                        <a href="{{ route('profile') }}" class="btn btn-ghost">Profile</a>
-                        <a href="{{ route('bookmarks.index') }}" class="btn btn-ghost">Bookmarks</a>
-                        <a href="{{ route('history.index') }}" class="btn btn-ghost">Reading History</a>
+                <div id="site-menu" class="nav-menu" aria-label="Site navigation">
+                    <nav class="main-nav" aria-label="Main navigation">
+                        <a href="{{ route('home') }}">Home</a>
+                        <a href="{{ route('comics') }}">Comics</a>
+                        <a href="{{ route('genres') }}">Genres</a>
+                        <a href="{{ route('search') }}">Search</a>
+                    </nav>
 
-                        @if (auth()->user()->role === 'admin')
-                            <a href="{{ route('admin.dashboard') }}" class="btn btn-ghost">Admin Dashboard</a>
-                        @endif
+                    <div class="nav-actions">
+                        @guest
+                            <a href="{{ route('login') }}" class="btn btn-ghost">Login</a>
+                            <a href="{{ route('register') }}" class="btn btn-primary">Register</a>
+                        @else
+                            <a href="{{ route('profile') }}" class="btn btn-ghost">Profile</a>
+                            <a href="{{ route('bookmarks.index') }}" class="btn btn-ghost">Bookmarks</a>
+                            <a href="{{ route('history.index') }}" class="btn btn-ghost">Reading History</a>
 
-                        <form method="POST" action="{{ route('logout') }}" class="inline-form">
-                            @csrf
-                            <button type="submit" class="btn btn-danger">Logout</button>
-                        </form>
-                    @endguest
+                            @if (auth()->user()->role === 'admin')
+                                <a href="{{ route('admin.dashboard') }}" class="btn btn-ghost">Admin Dashboard</a>
+                            @endif
+
+                            <form method="POST" action="{{ route('logout') }}" class="inline-form">
+                                @csrf
+                                <button type="submit" class="btn btn-danger">Logout</button>
+                            </form>
+                        @endguest
+                    </div>
                 </div>
             </div>
         </header>
