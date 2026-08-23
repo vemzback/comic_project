@@ -558,6 +558,90 @@ input {
     font-weight: 700;
 }
 
+.account-shell {
+    display: flex;
+    justify-content: center;
+    padding: 4rem 1rem 5rem;
+}
+
+.account-card {
+    width: min(100%, 680px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    box-shadow: var(--shadow);
+    padding: 2.25rem 1.5rem 1.5rem;
+}
+
+.account-card-narrow {
+    width: min(100%, 480px);
+}
+
+.account-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.account-header .eyebrow {
+    margin-bottom: 0.75rem;
+}
+
+.account-header h1 {
+    margin: 0;
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    line-height: 1.1;
+}
+
+.account-header p:last-child,
+.account-actions p {
+    margin: 0.75rem 0 0;
+    color: var(--muted);
+}
+
+.account-section + .account-section {
+    border-top: 1px solid var(--border);
+    margin-top: 2rem;
+    padding-top: 2rem;
+}
+
+.account-section h2 {
+    margin: 0 0 1.25rem;
+    font-size: 1.2rem;
+}
+
+.form-success {
+    margin-bottom: 1rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid rgba(22, 163, 74, 0.2);
+    border-radius: 12px;
+    background: rgba(22, 163, 74, 0.08);
+    color: #166534;
+    font-weight: 600;
+}
+
+.account-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.account-actions h2 {
+    margin-bottom: 0;
+}
+
+.account-actions p {
+    margin-top: 0.4rem;
+}
+
+.account-back-link {
+    display: block;
+    margin-top: 1.25rem;
+    color: var(--primary);
+    font-weight: 700;
+    text-align: center;
+}
+
 .site-footer {
     background: var(--header);
     color: #fff;
@@ -900,6 +984,11 @@ input {
 
     .nav-actions {
         margin-left: 0;
+    }
+
+    .account-actions {
+        align-items: flex-start;
+        flex-direction: column;
     }
 
     /* Comic Detail Responsive */
