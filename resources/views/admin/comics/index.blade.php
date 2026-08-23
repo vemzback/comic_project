@@ -58,6 +58,7 @@
                                     <td data-label="Published">{{ $comic->published_at?->format('M j, Y') ?? 'Unpublished' }}</td>
                                     <td data-label="Actions">
                                         <div class="admin-actions">
+                                            <a href="{{ route('admin.comics.chapters.index', $comic) }}" class="btn btn-secondary">Chapters</a>
                                             <a href="{{ route('admin.comics.edit', $comic) }}" class="btn btn-secondary">Edit</a>
                                             <form method="POST" action="{{ route('admin.comics.destroy', $comic) }}" class="inline-form">
                                                 @csrf

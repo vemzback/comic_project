@@ -699,6 +699,39 @@ input {
     color: var(--muted);
 }
 
+.admin-detail-card {
+    overflow: hidden;
+}
+
+.admin-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--border);
+}
+
+.admin-detail-item {
+    margin: 0;
+    padding: 1.25rem 1.5rem;
+    background: var(--surface);
+}
+
+.admin-detail-item dt {
+    margin-bottom: 0.35rem;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.admin-detail-item dd {
+    margin: 0;
+    color: var(--text);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
 .admin-table-wrap {
     overflow-x: auto;
 }
@@ -763,6 +796,23 @@ input {
 .status-hiatus {
     background: #fef3c7;
     color: #92400e;
+}
+
+.status-published {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-draft {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.admin-table-meta {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--muted-light);
+    white-space: nowrap;
 }
 
 .admin-empty-state {
@@ -1218,6 +1268,10 @@ input {
     .account-actions {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .admin-detail-grid {
+        grid-template-columns: 1fr;
     }
 
     /* Comic Detail Responsive */
