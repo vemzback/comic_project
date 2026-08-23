@@ -1616,7 +1616,146 @@ input {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    /* Comic Detail Responsive */
+
+    /* Admin Page Header Responsive */
+    .admin-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .admin-page-header > div:first-child {
+        width: 100%;
+    }
+
+    .admin-page-header h1 {
+        font-size: clamp(1.6rem, 3.5vw, 2.75rem);
+    }
+
+    .admin-toolbar,
+    .admin-form-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .admin-toolbar .btn,
+    .admin-form-actions .btn {
+        flex: 1 1 auto;
+        min-width: 120px;
+    }
+
+    /* Admin Form Responsive */
+    .admin-form {
+        padding: 1rem;
+    }
+
+    .admin-form-section {
+        padding: 0 0 1.25rem;
+    }
+
+    .admin-form-section + .admin-form-section {
+        margin-top: 1.25rem;
+    }
+
+    .admin-form-section legend {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .admin-field {
+        gap: 0.35rem;
+    }
+
+    /* Admin Actions Responsive */
+    .admin-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .admin-actions .btn,
+    .admin-actions .inline-form .btn {
+        width: 100%;
+        padding: 0.65rem 0.75rem;
+        font-size: 0.9rem;
+        text-align: center;
+    }
+
+    /* Admin Table Responsive */
+    .admin-table {
+        min-width: 100%;
+        font-size: 0.9rem;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        padding: 0.75rem 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .admin-table th {
+        font-size: 0.7rem;
+    }
+
+    .admin-table-wrap {
+        border-radius: 12px;
+    }
+
+    .admin-table-title {
+        min-width: 140px;
+    }
+
+    .admin-table-genres {
+        min-width: 120px;
+    }
+
+    .admin-table-path {
+        min-width: 180px;
+    }
+
+    .admin-comment-body {
+        min-width: 200px;
+        max-width: 300px;
+    }
+
+    /* Admin Card Responsive */
+    .admin-card {
+        border-radius: 12px;
+    }
+
+    .admin-card-header {
+        padding: 1rem;
+    }
+
+    .admin-card-body {
+        padding: 1rem;
+    }
+
+    .admin-filter-form {
+        padding: 1rem;
+    }
+
+    /* Admin Detail Grid Responsive */
+    .admin-detail-item {
+        padding: 0.9rem 1rem;
+    }
+
+    .admin-detail-item dt {
+        font-size: 0.7rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .admin-detail-item dd {
+        font-size: 0.95rem;
+    }
+
+    /* Admin Activity Grid Typography */
+    .admin-activity-grid dt {
+        font-size: 0.7rem;
+    }
+
+    .admin-activity-grid dd {
+        font-size: 1.3rem;
+    }    /* Comic Detail Responsive */
     .comic-detail-grid {
         grid-template-columns: 1fr;
     }
@@ -1683,4 +1822,64 @@ input {
         padding-top: 0.6rem;
         padding-bottom: 0.6rem;
     }
-}
+
+    /* Admin Ultra-Mobile Adjustments */
+    .admin-page-header h1 {
+        font-size: 1.4rem;
+    }
+
+    .admin-toolbar .btn,
+    .admin-form-actions .btn {
+        min-width: 100px;
+        padding: 0.55rem 0.65rem;
+        font-size: 0.85rem;
+    }
+
+    .admin-form {
+        padding: 0.75rem;
+    }
+
+    .admin-table {
+        min-width: 95%;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        padding: 0.6rem 0.6rem;
+        font-size: 0.8rem;
+    }
+
+    .admin-table th {
+        font-size: 0.65rem;
+    }
+
+    .admin-table-title {
+        min-width: 110px;
+    }
+
+    .admin-table-genres {
+        min-width: 100px;
+    }
+
+    .admin-table-path {
+        min-width: 140px;
+    }
+
+    .admin-comment-body {
+        min-width: 160px;
+        max-width: 240px;
+    }
+
+    .admin-actions .btn,
+    .admin-actions .inline-form .btn {
+        padding: 0.55rem 0.6rem;
+        font-size: 0.8rem;
+    }
+
+    .admin-activity-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-activity-grid dd {
+        font-size: 1.1rem;
+    }}
