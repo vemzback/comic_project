@@ -7,6 +7,67 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+# Comic Project
+
+A Laravel-based comic reading platform with public discovery, chapter reading,
+user bookmarks, ratings, comments, reading history, and administrator content
+management.
+
+## Requirements
+
+- PHP 8.2 or newer
+- Composer
+- Node.js and npm
+- MariaDB/MySQL for development or production
+- A web server configured to serve the `public/` directory
+
+## Local Installation
+
+1. Install dependencies:
+
+	```text
+	composer install
+	npm install
+	```
+
+2. Create `.env` from `.env.example`, configure the database, and generate the
+   application key:
+
+	```text
+	php artisan key:generate
+	```
+
+3. Run migrations and configure public media storage:
+
+	```text
+	php artisan migrate
+	php artisan storage:link
+	```
+
+4. Build frontend assets and start the local server:
+
+	```text
+	npm run build
+	php artisan serve
+	```
+
+For local Vite development, use `npm run dev`. The optional demo seeder is
+intended for non-production environments only.
+
+## Initial Administrator Setup
+
+Create a normal account through registration, then assign the `admin` role
+through an approved database or provisioning procedure. Never expose database
+credentials or application secrets in source control.
+
+## Testing
+
+```text
+php artisan test --no-coverage
+php artisan view:cache
+npm run build
+```
+
 ## Production Safety
 
 Before deploying, configure the production environment separately from this local development template:
@@ -182,7 +243,7 @@ After deployment, verify:
 - Migration status is expected.
 - Disk usage is healthy.
 
-The current v1.0 release does not require a queue worker, scheduler, or SMTP service. Password recovery remains deferred. Deleting a comic may leave cascaded chapter/page image files orphaned; cleanup automation is post-v1.0 work. An intermittent `ChapterFactory` uniqueness collision remains a separate test-engineering issue and is not fixed by this runbook.
+The current v1.0 release does not require a queue worker, scheduler, or SMTP service. Password recovery remains deferred. Comic deletion removes its cover and descendant chapter/page media through the public storage disk. An intermittent `ChapterFactory` uniqueness collision remains a separate test-engineering issue and is not fixed by this runbook.
 
 ## About Laravel
 

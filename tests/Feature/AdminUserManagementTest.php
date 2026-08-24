@@ -334,6 +334,15 @@ class AdminUserManagementTest extends TestCase
         $response->assertSee('Alice Reader');
     }
 
+    public function test_admin_search_rejects_oversized_queries(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)
+            ->get('/admin/users?search=' . str_repeat('x', 256))
+            ->assertSessionHasErrors(['search']);
+    }
+
     public function test_admin_search_excludes_nonmatching_users(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

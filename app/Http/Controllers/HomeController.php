@@ -112,7 +112,10 @@ class HomeController extends Controller
             return view('public.search', ['query' => '', 'results' => collect()]);
         }
 
-        $query = trim((string) $request->query('q', ''));
+        $validated = $request->validate([
+            'q' => ['nullable', 'string', 'max:255'],
+        ]);
+        $query = trim((string) ($validated['q'] ?? ''));
 
         $results = Comic::query()
             ->with('genres')

@@ -350,6 +350,12 @@ class ComicReaderTest extends TestCase
         $response->assertSee(route('comic.detail', $comic));
     }
 
+    public function test_public_search_rejects_oversized_queries(): void
+    {
+        $this->get(route('search', ['q' => str_repeat('x', 256)]))
+            ->assertSessionHasErrors(['q']);
+    }
+
     public function test_homepage_latest_chapters_link_to_reader(): void
     {
         $comic = Comic::factory()->create(['published_at' => now()]);

@@ -15,7 +15,10 @@ class UserController extends Controller
 {
     public function index(Request $request): View
     {
-        $search = trim($request->query('search', ''));
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+        ]);
+        $search = trim((string) ($validated['search'] ?? ''));
         $role = trim($request->query('role', ''));
 
         // Validate and filter invalid role values
