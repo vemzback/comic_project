@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Comic;
 use App\Models\Genre;
+use App\Models\Page;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -101,8 +102,19 @@ class ComicController extends Controller
 
     public function destroy(Comic $comic): RedirectResponse
     {
-        if (! empty($comic->cover_image) && Storage::disk('public')->exists($comic->cover_image)) {
-            Storage::disk('public')->delete($comic->cover_image);
+        $publicDisk = Storage::disk('public');
+        $pagePaths = Page::query()
+            ->whereHas('chapter', fn ($query) => $query->where('comic_id', $comic->id))
+            ->pluck('image_path')
+            ->filter()
+            ->unique();
+
+        foreach ($pagePaths as $pagePath) {
+            $publicDisk->delete($pagePath);
+        }
+
+        if (! empty($comic->cover_image)) {
+            $publicDisk->delete($comic->cover_image);
         }
 
         $comic->delete();

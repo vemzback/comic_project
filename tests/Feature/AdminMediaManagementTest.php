@@ -120,6 +120,74 @@ class AdminMediaManagementTest extends TestCase
         Storage::disk('public')->assertMissing('comics/covers/delete-me.jpg');
     }
 
+    public function test_deleting_comic_removes_descendant_page_media_and_preserves_other_comic_media(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $comic = Comic::factory()->create([
+            'cover_image' => 'comics/covers/delete-comic.jpg',
+        ]);
+        $otherComic = Comic::factory()->create([
+            'cover_image' => 'comics/covers/keep-comic.jpg',
+        ]);
+        $chapterOne = Chapter::factory()->create(['comic_id' => $comic->id, 'chapter_number' => 1]);
+        $chapterTwo = Chapter::factory()->create(['comic_id' => $comic->id, 'chapter_number' => 2]);
+        $otherChapter = Chapter::factory()->create(['comic_id' => $otherComic->id, 'chapter_number' => 1]);
+        $pageOne = Page::factory()->create([
+            'chapter_id' => $chapterOne->id,
+            'image_path' => 'chapters/pages/delete-comic-one.jpg',
+        ]);
+        $pageTwo = Page::factory()->create([
+            'chapter_id' => $chapterTwo->id,
+            'image_path' => 'chapters/pages/delete-comic-two.jpg',
+        ]);
+        $otherPage = Page::factory()->create([
+            'chapter_id' => $otherChapter->id,
+            'image_path' => 'chapters/pages/keep-comic.jpg',
+        ]);
+
+        Storage::disk('public')->put($comic->cover_image, 'comic cover');
+        Storage::disk('public')->put($otherComic->cover_image, 'other cover');
+        Storage::disk('public')->put($pageOne->image_path, 'page one');
+        Storage::disk('public')->put($pageTwo->image_path, 'page two');
+        Storage::disk('public')->put($otherPage->image_path, 'other page');
+
+        $this->actingAs($admin)
+            ->delete(route('admin.comics.destroy', $comic))
+            ->assertRedirect(route('admin.comics.index'));
+
+        $this->assertDatabaseMissing('comics', ['id' => $comic->id]);
+        $this->assertDatabaseMissing('chapters', ['id' => $chapterOne->id]);
+        $this->assertDatabaseMissing('chapters', ['id' => $chapterTwo->id]);
+        $this->assertDatabaseMissing('pages', ['id' => $pageOne->id]);
+        $this->assertDatabaseMissing('pages', ['id' => $pageTwo->id]);
+        Storage::disk('public')->assertMissing($comic->cover_image);
+        Storage::disk('public')->assertMissing($pageOne->image_path);
+        Storage::disk('public')->assertMissing($pageTwo->image_path);
+        Storage::disk('public')->assertExists($otherComic->cover_image);
+        Storage::disk('public')->assertExists($otherPage->image_path);
+    }
+
+    public function test_deleting_comic_succeeds_when_cover_and_page_media_are_missing(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $comic = Comic::factory()->create([
+            'cover_image' => 'comics/covers/already-missing.jpg',
+        ]);
+        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $page = Page::factory()->create([
+            'chapter_id' => $chapter->id,
+            'image_path' => 'chapters/pages/already-missing.jpg',
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.comics.destroy', $comic))
+            ->assertRedirect(route('admin.comics.index'));
+
+        $this->assertDatabaseMissing('comics', ['id' => $comic->id]);
+        $this->assertDatabaseMissing('chapters', ['id' => $chapter->id]);
+        $this->assertDatabaseMissing('pages', ['id' => $page->id]);
+    }
+
     public function test_guest_cannot_upload_page_image(): void
     {
         $comic = Comic::factory()->create();
