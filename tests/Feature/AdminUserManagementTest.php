@@ -179,10 +179,13 @@ class AdminUserManagementTest extends TestCase
             Bookmark::create(['user_id' => $user->id, 'comic_id' => $comic->id]);
         }
         
-        // Reading history: one comic with one chapter and 5 reads
+        // Reading history: one comic with five distinct chapter progress records
         $comic = Comic::factory()->create();
-        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
         for ($i = 0; $i < 5; $i++) {
+            $chapter = Chapter::factory()->create([
+                'comic_id' => $comic->id,
+                'chapter_number' => $i + 1,
+            ]);
             ReadingHistory::create([
                 'user_id' => $user->id,
                 'comic_id' => $comic->id,

@@ -8,6 +8,7 @@ use App\Models\Page;
 use App\Models\ReadingHistory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Database\QueryException;
 use Tests\TestCase;
 
 class ReadingHistoryTest extends TestCase
@@ -121,6 +122,96 @@ class ReadingHistoryTest extends TestCase
             'chapter_id' => $this->chapter->id,
             'page_number' => 5,
         ]);
+    }
+
+    public function test_same_identity_cannot_create_duplicate_history_rows(): void
+    {
+        ReadingHistory::create([
+            'user_id' => $this->user->id,
+            'comic_id' => $this->comic->id,
+            'chapter_id' => $this->chapter->id,
+            'page_number' => 1,
+        ]);
+
+        $this->expectException(QueryException::class);
+
+        ReadingHistory::create([
+            'user_id' => $this->user->id,
+            'comic_id' => $this->comic->id,
+            'chapter_id' => $this->chapter->id,
+            'page_number' => 2,
+        ]);
+    }
+
+    public function test_same_user_and_comic_can_have_different_chapter_history_rows(): void
+    {
+        $secondChapter = Chapter::factory()->create([
+            'comic_id' => $this->comic->id,
+            'chapter_number' => 2,
+            'is_published' => true,
+        ]);
+
+        ReadingHistory::create([
+            'user_id' => $this->user->id,
+            'comic_id' => $this->comic->id,
+            'chapter_id' => $this->chapter->id,
+        ]);
+        ReadingHistory::create([
+            'user_id' => $this->user->id,
+            'comic_id' => $this->comic->id,
+            'chapter_id' => $secondChapter->id,
+        ]);
+
+        $this->assertDatabaseCount('reading_history', 2);
+    }
+
+    public function test_different_users_can_have_history_for_the_same_chapter(): void
+    {
+        ReadingHistory::create([
+            'user_id' => $this->user->id,
+            'comic_id' => $this->comic->id,
+            'chapter_id' => $this->chapter->id,
+        ]);
+        ReadingHistory::create([
+            'user_id' => $this->otherUser->id,
+            'comic_id' => $this->comic->id,
+            'chapter_id' => $this->chapter->id,
+        ]);
+
+        $this->assertDatabaseCount('reading_history', 2);
+    }
+
+    public function test_one_null_chapter_history_is_allowed_per_user_and_comic(): void
+    {
+        ReadingHistory::create([
+            'user_id' => $this->user->id,
+            'comic_id' => $this->comic->id,
+            'chapter_id' => null,
+        ]);
+
+        $this->expectException(QueryException::class);
+
+        ReadingHistory::create([
+            'user_id' => $this->user->id,
+            'comic_id' => $this->comic->id,
+            'chapter_id' => null,
+        ]);
+    }
+
+    public function test_different_users_can_each_have_null_chapter_history_for_same_comic(): void
+    {
+        ReadingHistory::create([
+            'user_id' => $this->user->id,
+            'comic_id' => $this->comic->id,
+            'chapter_id' => null,
+        ]);
+        ReadingHistory::create([
+            'user_id' => $this->otherUser->id,
+            'comic_id' => $this->comic->id,
+            'chapter_id' => null,
+        ]);
+
+        $this->assertDatabaseCount('reading_history', 2);
     }
 
     /**

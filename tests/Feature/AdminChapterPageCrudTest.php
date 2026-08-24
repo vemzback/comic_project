@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Chapter;
 use App\Models\Comic;
 use App\Models\Page;
+use App\Models\ReadingHistory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -141,6 +142,91 @@ class AdminChapterPageCrudTest extends TestCase
             ->assertRedirect(route('admin.comics.chapters.index', $comic));
 
         $this->assertDatabaseMissing('chapters', ['id' => $chapter->id]);
+    }
+
+    public function test_deleting_chapter_preserves_history_as_null(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $comic = Comic::factory()->create();
+        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $history = ReadingHistory::create([
+            'user_id' => $admin->id,
+            'comic_id' => $comic->id,
+            'chapter_id' => $chapter->id,
+            'page_number' => 4,
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.comics.chapters.destroy', [$comic, $chapter]))
+            ->assertRedirect(route('admin.comics.chapters.index', $comic));
+
+        $history->refresh();
+        $this->assertNull($history->chapter_id);
+        $this->assertSame(4, $history->page_number);
+    }
+
+    public function test_deleting_chapter_merges_colliding_history_and_preserves_other_users_and_comics(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $otherUser = User::factory()->create();
+        $comic = Comic::factory()->create();
+        $otherComic = Comic::factory()->create();
+        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $otherChapter = Chapter::factory()->create(['comic_id' => $otherComic->id]);
+        $nullHistory = ReadingHistory::create([
+            'user_id' => $admin->id,
+            'comic_id' => $comic->id,
+            'chapter_id' => null,
+            'page_number' => 2,
+            'last_read_at' => now()->subDay(),
+        ]);
+        $chapterHistory = ReadingHistory::create([
+            'user_id' => $admin->id,
+            'comic_id' => $comic->id,
+            'chapter_id' => $chapter->id,
+            'page_number' => 8,
+            'last_read_at' => now(),
+        ]);
+        $otherUserHistory = ReadingHistory::create([
+            'user_id' => $otherUser->id,
+            'comic_id' => $comic->id,
+            'chapter_id' => null,
+            'page_number' => 3,
+            'last_read_at' => now()->subHours(2),
+        ]);
+        $otherUserChapterHistory = ReadingHistory::create([
+            'user_id' => $otherUser->id,
+            'comic_id' => $comic->id,
+            'chapter_id' => $chapter->id,
+            'page_number' => 7,
+            'last_read_at' => now()->subHour(),
+        ]);
+        $otherComicHistory = ReadingHistory::create([
+            'user_id' => $admin->id,
+            'comic_id' => $otherComic->id,
+            'chapter_id' => $otherChapter->id,
+            'page_number' => 6,
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.comics.chapters.destroy', [$comic, $chapter]))
+            ->assertRedirect(route('admin.comics.chapters.index', $comic));
+
+        $this->assertDatabaseMissing('reading_history', ['id' => $nullHistory->id]);
+        $this->assertDatabaseHas('reading_history', [
+            'id' => $chapterHistory->id,
+            'comic_id' => $comic->id,
+            'chapter_id' => null,
+            'page_number' => 8,
+        ]);
+        $this->assertDatabaseMissing('reading_history', ['id' => $otherUserHistory->id]);
+        $this->assertDatabaseHas('reading_history', [
+            'id' => $otherUserChapterHistory->id,
+            'comic_id' => $comic->id,
+            'chapter_id' => null,
+            'page_number' => 7,
+        ]);
+        $this->assertDatabaseHas('reading_history', ['id' => $otherComicHistory->id]);
     }
 
     public function test_guest_cannot_access_page_management(): void
