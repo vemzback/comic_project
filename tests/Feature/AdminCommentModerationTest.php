@@ -22,8 +22,14 @@ class AdminCommentModerationTest extends TestCase
     {
         parent::setUp();
 
-        $this->comic = Comic::factory()->create(['status' => 'ongoing']);
-        $this->otherComic = Comic::factory()->create(['status' => 'ongoing']);
+        $this->comic = Comic::factory()->create([
+            'status' => 'ongoing',
+            'published_at' => now(),
+        ]);
+        $this->otherComic = Comic::factory()->create([
+            'status' => 'ongoing',
+            'published_at' => now(),
+        ]);
         $this->admin = User::factory()->create(['role' => 'admin']);
         $this->user = User::factory()->create(['role' => 'user']);
         $this->otherUser = User::factory()->create(['role' => 'user']);

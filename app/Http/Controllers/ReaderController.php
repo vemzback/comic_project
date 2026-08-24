@@ -12,6 +12,10 @@ class ReaderController extends Controller
 {
     public function show(Comic $comic, Chapter $chapter): View
     {
+        if (! $comic->published_at || $comic->published_at->isFuture()) {
+            abort(404);
+        }
+
         // Ensure chapter belongs to this comic
         if ($chapter->comic_id !== $comic->id) {
             abort(404);

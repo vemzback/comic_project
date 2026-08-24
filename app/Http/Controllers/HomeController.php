@@ -25,14 +25,14 @@ class HomeController extends Controller
         $featuredComics = Comic::query()
             ->with('genres')
             ->where('is_featured', true)
-            ->whereNotNull('published_at')
+            ->published()
             ->orderByDesc('published_at')
             ->limit(4)
             ->get();
 
         $latestComics = Comic::query()
             ->with('genres')
-            ->whereNotNull('published_at')
+            ->published()
             ->orderByDesc('published_at')
             ->limit(6)
             ->get();
@@ -40,6 +40,7 @@ class HomeController extends Controller
         $latestChapters = Chapter::query()
             ->with('comic')
             ->where('is_published', true)
+            ->whereHas('comic', fn ($query) => $query->published())
             ->orderByDesc('published_at')
             ->limit(5)
             ->get();
@@ -61,7 +62,7 @@ class HomeController extends Controller
 
         $comics = Comic::query()
             ->with('genres')
-            ->whereNotNull('published_at')
+            ->published()
             ->orderByDesc('published_at')
             ->paginate(12);
 
@@ -89,7 +90,7 @@ class HomeController extends Controller
         }
 
         $genreComics = $genre->comics()
-            ->whereNotNull('published_at')
+            ->published()
             ->orderByDesc('published_at')
             ->get();
 
@@ -122,7 +123,7 @@ class HomeController extends Controller
                         ->orWhere('seo_title', 'like', "%{$query}%");
                 });
             })
-            ->whereNotNull('published_at')
+            ->published()
             ->orderByDesc('published_at')
             ->limit(12)
             ->get();

@@ -134,7 +134,7 @@ class UserBookmarkTest extends TestCase
     public function test_comic_detail_shows_bookmarked_state(): void
     {
         $user = User::factory()->create();
-        $comic = Comic::factory()->create();
+        $comic = Comic::factory()->create(['published_at' => now()]);
         Bookmark::create(['user_id' => $user->id, 'comic_id' => $comic->id]);
 
         $this->actingAs($user)
@@ -146,7 +146,7 @@ class UserBookmarkTest extends TestCase
     public function test_comic_detail_shows_unbookmarked_state(): void
     {
         $user = User::factory()->create();
-        $comic = Comic::factory()->create();
+        $comic = Comic::factory()->create(['published_at' => now()]);
 
         $this->actingAs($user)
             ->get(route('comic.detail', $comic))

@@ -9,6 +9,10 @@ class ComicDetailController extends Controller
 {
     public function show(Comic $comic): View
     {
+        if (! $comic->published_at || $comic->published_at->isFuture()) {
+            abort(404);
+        }
+
         $comic->load([
             'chapters' => function ($query) {
                 $query->where('is_published', true)

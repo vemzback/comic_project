@@ -27,6 +27,20 @@ class ComicReaderTest extends TestCase
         $response->assertViewHas('comic', $comic);
     }
 
+    public function test_unpublished_comic_detail_returns_404(): void
+    {
+        $comic = Comic::factory()->create(['published_at' => null]);
+
+        $this->get(route('comic.detail', $comic))->assertNotFound();
+    }
+
+    public function test_future_dated_comic_detail_returns_404(): void
+    {
+        $comic = Comic::factory()->create(['published_at' => now()->addDay()]);
+
+        $this->get(route('comic.detail', $comic))->assertNotFound();
+    }
+
     public function test_missing_comic_cover_uses_local_placeholder(): void
     {
         $comic = Comic::factory()->create([
@@ -103,6 +117,30 @@ class ComicReaderTest extends TestCase
         $response = $this->get(route('chapter.reader', ['comic' => $comic, 'chapter' => $chapter]));
 
         $response->assertStatus(404);
+    }
+
+    public function test_public_cannot_view_published_chapter_under_unpublished_comic(): void
+    {
+        $comic = Comic::factory()->create(['published_at' => null]);
+        $chapter = Chapter::factory()->create([
+            'comic_id' => $comic->id,
+            'is_published' => true,
+        ]);
+
+        $this->get(route('chapter.reader', ['comic' => $comic, 'chapter' => $chapter]))
+            ->assertNotFound();
+    }
+
+    public function test_public_cannot_view_published_chapter_under_future_dated_comic(): void
+    {
+        $comic = Comic::factory()->create(['published_at' => now()->addDay()]);
+        $chapter = Chapter::factory()->create([
+            'comic_id' => $comic->id,
+            'is_published' => true,
+        ]);
+
+        $this->get(route('chapter.reader', ['comic' => $comic, 'chapter' => $chapter]))
+            ->assertNotFound();
     }
 
     public function test_chapter_displays_all_pages_in_order(): void
@@ -329,6 +367,18 @@ class ComicReaderTest extends TestCase
         $response->assertSee(route('chapter.reader', ['comic' => $comic, 'chapter' => $chapter]));
     }
 
+    public function test_public_discovery_excludes_future_dated_comics(): void
+    {
+        $futureComic = Comic::factory()->create([
+            'title' => 'Future Comic',
+            'published_at' => now()->addDay(),
+        ]);
+
+        foreach ([route('home'), route('comics'), route('search', ['q' => 'Future'])] as $url) {
+            $this->get($url)->assertOk()->assertDontSee($futureComic->title);
+        }
+    }
+
     public function test_genre_page_shows_comics_for_the_selected_genre(): void
     {
         $genre = Genre::factory()->create(['slug' => 'action']);
@@ -340,5 +390,19 @@ class ComicReaderTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee($comic->title);
         $response->assertSee(route('comic.detail', $comic));
+    }
+
+    public function test_genre_page_excludes_future_dated_comics(): void
+    {
+        $genre = Genre::factory()->create(['slug' => 'future-action']);
+        $futureComic = Comic::factory()->create([
+            'title' => 'Future Action Comic',
+            'published_at' => now()->addDay(),
+        ]);
+        $futureComic->genres()->sync([$genre->id]);
+
+        $this->get(route('genres.show', $genre))
+            ->assertOk()
+            ->assertDontSee($futureComic->title);
     }
 }

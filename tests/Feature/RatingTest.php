@@ -19,7 +19,10 @@ class RatingTest extends TestCase
     {
         parent::setUp();
 
-        $this->comic = Comic::factory()->create(['status' => 'ongoing']);
+        $this->comic = Comic::factory()->create([
+            'status' => 'ongoing',
+            'published_at' => now(),
+        ]);
         $this->user = User::factory()->create(['role' => 'user']);
     }
 

@@ -117,6 +117,27 @@ class AdminComicCrudTest extends TestCase
         $this->assertTrue($comic->genres()->whereKey($genre->id)->exists());
     }
 
+    public function test_admin_can_manage_a_future_dated_comic(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)
+            ->post('/admin/comics', [
+                'title' => 'Scheduled Comic',
+                'slug' => 'scheduled-comic',
+                'status' => 'ongoing',
+                'published_at' => now()->addDay()->toDateTimeString(),
+            ])
+            ->assertRedirect(route('admin.comics.index'));
+
+        $comic = Comic::query()->where('slug', 'scheduled-comic')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->get(route('admin.comics.edit', $comic))
+            ->assertOk()
+            ->assertSee('Scheduled Comic');
+    }
+
     public function test_duplicate_slug_is_rejected(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

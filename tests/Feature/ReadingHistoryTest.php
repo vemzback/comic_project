@@ -24,7 +24,10 @@ class ReadingHistoryTest extends TestCase
         parent::setUp();
 
         // Create test comic with chapters and pages
-        $this->comic = Comic::factory()->create(['status' => 'ongoing']);
+        $this->comic = Comic::factory()->create([
+            'status' => 'ongoing',
+            'published_at' => now(),
+        ]);
         
         $this->chapter = Chapter::factory()->create([
             'comic_id' => $this->comic->id,
