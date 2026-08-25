@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ChapterController;
 use App\Http\Controllers\Admin\ComicController;
 use App\Http\Controllers\Admin\CommentController as AdminCommentController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\GenreController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
@@ -71,6 +72,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
 
     Route::resource('comics', ComicController::class);
+
+    Route::get('/genres', [GenreController::class, 'index'])->name('genres.index');
+    Route::get('/genres/create', [GenreController::class, 'create'])->name('genres.create');
+    Route::post('/genres', [GenreController::class, 'store'])->name('genres.store');
+    Route::get('/genres/{genre}/edit', [GenreController::class, 'edit'])->name('genres.edit');
+    Route::put('/genres/{genre}', [GenreController::class, 'update'])->name('genres.update');
+    Route::delete('/genres/{genre}', [GenreController::class, 'destroy'])->name('genres.destroy');
 
     Route::get('/comics/{comic}/chapters', [ChapterController::class, 'index'])->name('comics.chapters.index');
     Route::get('/comics/{comic}/chapters/create', [ChapterController::class, 'create'])->name('comics.chapters.create');

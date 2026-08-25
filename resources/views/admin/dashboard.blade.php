@@ -13,6 +13,7 @@
             <div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
                 <a href="{{ route('home') }}" class="btn btn-ghost">View Site</a>
                 <a href="{{ route('admin.comics.index') }}" class="btn btn-primary">Manage Comics</a>
+                <a href="{{ route('admin.genres.index') }}" class="btn btn-secondary">Manage Genres</a>
                 <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                     @csrf
                     <button type="submit" class="btn btn-danger">Logout</button>
