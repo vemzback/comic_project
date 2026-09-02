@@ -35,7 +35,8 @@ server {
     ssl_certificate <TLS_CERTIFICATE_PATH>;
     ssl_certificate_key <TLS_PRIVATE_KEY_PATH>;
 
-    client_max_body_size 3m;
+    # Supports the 38 MB chapter archive limit plus multipart overhead.
+    client_max_body_size 40m;
 
     location ^~ /.well-known/acme-challenge/ {
         try_files $uri =404;

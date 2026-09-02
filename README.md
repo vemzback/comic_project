@@ -91,6 +91,12 @@ Production requirements:
 
 ## Production Deployment
 
+For a client-accessible rehearsal, follow the dedicated staging guide first:
+
+```text
+deploy/STAGING.md
+```
+
 Run the deployment steps in this order:
 
 1. Install production PHP dependencies:
@@ -161,9 +167,9 @@ Before enabling it, replace these placeholders with deployment-specific values:
 
 The Nginx document root must remain the project's `public/` directory. The template handles the HTTP-to-HTTPS redirect, Laravel front-controller fallback, PHP-FPM routing, hidden-file protection, ACME challenge paths, and a 3 MB request limit for the application's 2 MB image validation limit. It does not enable HSTS or duplicate Laravel response headers.
 
-For production, use `APP_URL=https://<DOMAIN>`, `SESSION_SECURE_COOKIE=true`, and `APP_DEBUG=false`. Run `php artisan storage:link` so `public/storage` points to `storage/app/public`; keep `storage/` and `bootstrap/cache/` writable by PHP-FPM without making `public/` or the repository world-writable. PHP `upload_max_filesize` and `post_max_size` must allow the 2 MB application limit plus multipart overhead.
+For production, use `APP_URL=https://<DOMAIN>`, `SESSION_SECURE_COOKIE=true`, and `APP_DEBUG=false`. Run `php artisan storage:link` so `public/storage` points to `storage/app/public`; keep `storage/` and `bootstrap/cache/` writable by PHP-FPM without making `public/` or the repository world-writable. PHP should use `upload_max_filesize=40M` and `post_max_size=42M` so the 38 MB chapter ZIP/CBZ limit and multipart overhead can reach Laravel; individual image uploads remain limited to 2 MB by application validation.
 
-The current v1.0 feature set does not require a queue worker, scheduler, or SMTP service. Enable HSTS only after HTTPS, the canonical domain, and certificate renewal have been verified stable; do not enable `includeSubDomains` or `preload` in this phase.
+The current v1.1 release candidate does not require a queue worker or scheduler. A working SMTP service is required in staging and production for email verification and password-reset messages. Enable HSTS only after HTTPS, the canonical domain, and certificate renewal have been verified stable; do not enable `includeSubDomains` or `preload` in this phase.
 
 ## Operations Runbook
 
@@ -243,7 +249,7 @@ After deployment, verify:
 - Migration status is expected.
 - Disk usage is healthy.
 
-The current v1.0 release does not require a queue worker, scheduler, or SMTP service. Password recovery remains deferred. Comic deletion removes its cover and descendant chapter/page media through the public storage disk. An intermittent `ChapterFactory` uniqueness collision remains a separate test-engineering issue and is not fixed by this runbook.
+The current v1.1 release candidate does not require a queue worker or scheduler. SMTP must be configured to exercise email verification and password recovery outside local development. Comic deletion removes its cover and descendant chapter/page media through the public storage disk.
 
 ## About Laravel
 
