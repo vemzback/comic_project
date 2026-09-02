@@ -97,6 +97,12 @@ For a client-accessible rehearsal, follow the dedicated staging guide first:
 deploy/STAGING.md
 ```
 
+For the recommended Railway staging path, use:
+
+```text
+deploy/RAILWAY.md
+```
+
 Run the deployment steps in this order:
 
 1. Install production PHP dependencies:
