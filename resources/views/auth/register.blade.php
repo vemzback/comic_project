@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Register | Comic Project')
+@section('title', 'Register | zYx comic')
 
 @section('content')
     <div class="auth-shell">

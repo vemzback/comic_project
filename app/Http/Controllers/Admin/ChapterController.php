@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Chapter;
 use App\Models\Comic;
 use App\Models\ReadingHistory;
+use App\Services\ComicPublicationReadiness;
+use App\Services\PublicImageStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ChapterController extends Controller
@@ -30,6 +33,12 @@ class ChapterController extends Controller
     {
         $validated = $this->validateChapter($request, $comic, null);
 
+        if (! empty($validated['is_published'])) {
+            throw ValidationException::withMessages([
+                'is_published' => ['Create the chapter as a draft first. Add its pages, then publish it from the Edit page.'],
+            ]);
+        }
+
         $comic->chapters()->create([
             'chapter_number' => $validated['chapter_number'],
             'title' => $validated['title'],
@@ -49,41 +58,69 @@ class ChapterController extends Controller
         return view('admin.chapters.show', compact('comic', 'chapter'));
     }
 
-    public function edit(Comic $comic, Chapter $chapter): View
+    public function edit(Comic $comic, Chapter $chapter, ComicPublicationReadiness $readiness): View
     {
         $this->ensureChapterBelongsToComic($comic, $chapter);
+        $chapterReadiness = $readiness->evaluateChapter($chapter);
 
-        return view('admin.chapters.edit', compact('comic', 'chapter'));
+        return view('admin.chapters.edit', compact('comic', 'chapter', 'chapterReadiness'));
     }
 
-    public function update(Request $request, Comic $comic, Chapter $chapter): RedirectResponse
+    public function update(Request $request, Comic $comic, Chapter $chapter, ComicPublicationReadiness $readiness): RedirectResponse
     {
         $this->ensureChapterBelongsToComic($comic, $chapter);
 
         $validated = $this->validateChapter($request, $comic, $chapter);
+        $wasPublished = (bool) $chapter->is_published;
 
-        $chapter->update([
-            'chapter_number' => $validated['chapter_number'],
-            'title' => $validated['title'],
-            'slug' => $validated['slug'],
-            'sort_order' => $validated['sort_order'] ?? 0,
-            'is_published' => (bool) ($validated['is_published'] ?? false),
-            'published_at' => $validated['published_at'] ?? null,
-        ]);
+        DB::transaction(function () use ($chapter, $comic, $validated, $readiness, $wasPublished) {
+            $chapter->update([
+                'chapter_number' => $validated['chapter_number'],
+                'title' => $validated['title'],
+                'slug' => $validated['slug'],
+                'sort_order' => $validated['sort_order'] ?? 0,
+                'is_published' => (bool) ($validated['is_published'] ?? false),
+                'published_at' => $validated['published_at'] ?? null,
+            ]);
+
+            if ($chapter->is_published) {
+                $result = $readiness->evaluateChapter($chapter->fresh('pages'));
+
+                if (! $result['ready']) {
+                    throw ValidationException::withMessages([
+                        'is_published' => ['This chapter is not ready to publish: '.implode(' ', $result['blockers'])],
+                    ]);
+                }
+            }
+
+            if ($comic->published_at && $wasPublished && ! $chapter->is_published) {
+                $comicResult = $readiness->evaluate($comic->fresh(['genres', 'chapters.pages']));
+
+                if (! $comicResult['ready']) {
+                    throw ValidationException::withMessages([
+                        'is_published' => ['This change would make the published comic incomplete: '.implode(' ', $comicResult['blockers'])],
+                    ]);
+                }
+            }
+        });
 
         return redirect()->route('admin.comics.chapters.index', $comic)->with('success', 'Chapter updated successfully.');
     }
 
-    public function destroy(Comic $comic, Chapter $chapter): RedirectResponse
+    public function destroy(Comic $comic, Chapter $chapter, PublicImageStorage $images): RedirectResponse
     {
         $this->ensureChapterBelongsToComic($comic, $chapter);
+
+        if ($comic->published_at && $chapter->is_published) {
+            throw ValidationException::withMessages([
+                'chapter' => ['Unpublish this chapter or the comic before deleting it. This protects content that is public or scheduled.'],
+            ]);
+        }
 
         $this->mergeChapterHistoriesBeforeDelete($comic, $chapter);
 
         foreach ($chapter->pages as $page) {
-            if (! empty($page->image_path) && Storage::disk('public')->exists($page->image_path)) {
-                Storage::disk('public')->delete($page->image_path);
-            }
+            $images->delete($page->image_path);
         }
 
         $chapter->delete();

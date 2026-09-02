@@ -326,10 +326,79 @@ class ReadingHistoryTest extends TestCase
         $response = $this->actingAs($this->user)
             ->get(route('chapter.reader', ['comic' => $this->comic, 'chapter' => $this->chapter]));
 
-        $response->assertOk();
-        
-        // The response should indicate the saved progress
-        // (This could be in the view data or as a redirect parameter, TBD by implementation)
+        $response
+            ->assertOk()
+            ->assertViewHas('currentPageNumber', 6)
+            ->assertSee('data-initial-page="6"', false)
+            ->assertSee('id="page-6"', false)
+            ->assertSee('<span data-reader-current-position>6</span>', false);
+    }
+
+    public function test_reader_progress_endpoint_saves_the_visible_page(): void
+    {
+        $this->actingAs($this->user)
+            ->postJson(route('reader.progress', [
+                'comic' => $this->comic,
+                'chapter' => $this->chapter,
+            ]), ['page_number' => 8])
+            ->assertOk()
+            ->assertJsonPath('page_number', 8)
+            ->assertJsonPath('message', 'Reading position saved.');
+
+        $this->assertDatabaseHas('reading_history', [
+            'user_id' => $this->user->id,
+            'comic_id' => $this->comic->id,
+            'chapter_id' => $this->chapter->id,
+            'page_number' => 8,
+        ]);
+    }
+
+    public function test_reader_progress_endpoint_rejects_a_page_outside_the_chapter(): void
+    {
+        $this->actingAs($this->user)
+            ->postJson(route('reader.progress', [
+                'comic' => $this->comic,
+                'chapter' => $this->chapter,
+            ]), ['page_number' => 999])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('page_number');
+
+        $this->assertDatabaseMissing('reading_history', [
+            'user_id' => $this->user->id,
+            'chapter_id' => $this->chapter->id,
+        ]);
+    }
+
+    public function test_guest_cannot_post_reader_progress(): void
+    {
+        $this->postJson(route('reader.progress', [
+            'comic' => $this->comic,
+            'chapter' => $this->chapter,
+        ]), ['page_number' => 4])
+            ->assertUnauthorized();
+    }
+
+    public function test_comic_detail_continue_reading_targets_the_latest_saved_page(): void
+    {
+        ReadingHistory::create([
+            'user_id' => $this->user->id,
+            'comic_id' => $this->comic->id,
+            'chapter_id' => $this->chapter->id,
+            'page_number' => 7,
+            'last_read_at' => now(),
+        ]);
+
+        $continueUrl = route('chapter.reader', [
+            'comic' => $this->comic,
+            'chapter' => $this->chapter,
+            'page' => 7,
+        ]);
+
+        $this->actingAs($this->user)
+            ->get(route('comic.detail', $this->comic))
+            ->assertOk()
+            ->assertSee('Continue Reading')
+            ->assertSee('href="'.$continueUrl.'"', false);
     }
 
     /**

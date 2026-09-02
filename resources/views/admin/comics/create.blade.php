@@ -46,6 +46,24 @@
                         <textarea id="description" name="description" class="form-control">{{ old('description') }}</textarea>
                         @error('description') <span class="form-error" role="alert">{{ $message }}</span> @enderror
                     </div>
+
+                    <div class="admin-field">
+                        <label for="author" class="form-label">Author / Creator</label>
+                        <input id="author" type="text" name="author" value="{{ old('author') }}" class="form-control">
+                        @error('author') <span class="form-error" role="alert">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="admin-field">
+                        <label for="publisher" class="form-label">Publisher</label>
+                        <input id="publisher" type="text" name="publisher" value="{{ old('publisher') }}" class="form-control">
+                        @error('publisher') <span class="form-error" role="alert">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="admin-field">
+                        <label for="original_published_at" class="form-label">Original Publication Date</label>
+                        <input id="original_published_at" type="date" name="original_published_at" value="{{ old('original_published_at') }}" class="form-control">
+                        @error('original_published_at') <span class="form-error" role="alert">{{ $message }}</span> @enderror
+                    </div>
                 </div>
             </fieldset>
 
@@ -62,10 +80,10 @@
                         @error('status') <span class="form-error" role="alert">{{ $message }}</span> @enderror
                     </div>
 
-                    <div class="admin-field">
-                        <label for="published_at" class="form-label">Published At</label>
-                        <input id="published_at" type="date" name="published_at" value="{{ old('published_at') }}" class="form-control">
-                        @error('published_at') <span class="form-error" role="alert">{{ $message }}</span> @enderror
+                    <div class="admin-field admin-publishing-note">
+                        <span class="form-label">Initial visibility</span>
+                        <strong>Draft</strong>
+                        <p>New comics start as drafts. Add a complete chapter first, then publish from the Edit page.</p>
                     </div>
 
                     <div class="admin-field admin-checkbox-field">

@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Chapter;
 use App\Models\Comic;
 use App\Models\Page;
+use App\Services\ComicPublicationReadiness;
+use App\Services\PublicImageStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -31,17 +33,41 @@ class PageController extends Controller
         return view('admin.pages.create', compact('comic', 'chapter'));
     }
 
-    public function store(Request $request, Comic $comic, Chapter $chapter): RedirectResponse
-    {
+    public function store(
+        Request $request,
+        Comic $comic,
+        Chapter $chapter,
+        ComicPublicationReadiness $readiness,
+        PublicImageStorage $images,
+    ): RedirectResponse {
         $this->ensureChapterBelongsToComic($comic, $chapter);
 
         $validated = $this->validatePage($request, $chapter, null);
 
-        $chapter->pages()->create([
-            'page_number' => $validated['page_number'],
-            'title' => $validated['title'] ?? null,
-            'image_path' => $this->storeMediaFile($request->file('image_path'), 'chapters/pages', $request->input('image_path')),
-        ]);
+        $imagePath = $images->store(
+            $request->file('image_path'),
+            'chapters/pages',
+            'image_path',
+            $request->input('image_path'),
+        );
+
+        try {
+            DB::transaction(function () use ($chapter, $comic, $validated, $imagePath, $readiness) {
+                $chapter->pages()->create([
+                    'page_number' => $validated['page_number'],
+                    'title' => $validated['title'] ?? null,
+                    'image_path' => $imagePath,
+                ]);
+
+                $this->ensurePublishedContentRemainsReady($comic, $chapter, $readiness);
+            });
+        } catch (\Throwable $exception) {
+            if ($request->hasFile('image_path') && $imagePath) {
+                $images->delete($imagePath);
+            }
+
+            throw $exception;
+        }
 
         return redirect()->route('admin.comics.chapters.pages.index', [$comic, $chapter])->with('success', 'Page created successfully.');
     }
@@ -62,30 +88,64 @@ class PageController extends Controller
         return view('admin.pages.edit', compact('comic', 'chapter', 'page'));
     }
 
-    public function update(Request $request, Comic $comic, Chapter $chapter, Page $page): RedirectResponse
-    {
+    public function update(
+        Request $request,
+        Comic $comic,
+        Chapter $chapter,
+        Page $page,
+        ComicPublicationReadiness $readiness,
+        PublicImageStorage $images,
+    ): RedirectResponse {
         $this->ensureChapterBelongsToComic($comic, $chapter);
         $this->ensurePageBelongsToChapter($chapter, $page);
 
         $validated = $this->validatePage($request, $chapter, $page);
 
-        $page->update([
-            'page_number' => $validated['page_number'],
-            'title' => $validated['title'] ?? null,
-            'image_path' => $this->handleUploadedMedia($page->image_path, $request->file('image_path'), 'chapters/pages', $request->input('image_path')),
-        ]);
+        $oldImagePath = $page->image_path;
+        $newImagePath = $request->hasFile('image_path')
+            ? $images->store($request->file('image_path'), 'chapters/pages', 'image_path')
+            : null;
+        $requestedImagePath = is_string($request->input('image_path')) && $request->input('image_path') !== ''
+            ? $request->input('image_path')
+            : null;
+
+        try {
+            DB::transaction(function () use ($page, $chapter, $comic, $validated, $newImagePath, $requestedImagePath, $readiness) {
+                $page->update([
+                    'page_number' => $validated['page_number'],
+                    'title' => $validated['title'] ?? null,
+                    'image_path' => $newImagePath ?? $requestedImagePath ?? $page->image_path,
+                ]);
+
+                $this->ensurePublishedContentRemainsReady($comic, $chapter, $readiness);
+            });
+        } catch (\Throwable $exception) {
+            if ($newImagePath) {
+                $images->delete($newImagePath);
+            }
+
+            throw $exception;
+        }
+
+        if ($newImagePath && $oldImagePath && $oldImagePath !== $newImagePath) {
+            $images->delete($oldImagePath);
+        }
 
         return redirect()->route('admin.comics.chapters.pages.index', [$comic, $chapter])->with('success', 'Page updated successfully.');
     }
 
-    public function destroy(Comic $comic, Chapter $chapter, Page $page): RedirectResponse
+    public function destroy(Comic $comic, Chapter $chapter, Page $page, PublicImageStorage $images): RedirectResponse
     {
         $this->ensureChapterBelongsToComic($comic, $chapter);
         $this->ensurePageBelongsToChapter($chapter, $page);
 
-        if (! empty($page->image_path) && Storage::disk('public')->exists($page->image_path)) {
-            Storage::disk('public')->delete($page->image_path);
+        if ($comic->published_at && $chapter->is_published) {
+            throw ValidationException::withMessages([
+                'page' => ['Unpublish this chapter or the comic before deleting pages from it. This protects content that is public or scheduled.'],
+            ]);
         }
+
+        $images->delete($page->image_path);
 
         $page->delete();
 
@@ -104,6 +164,23 @@ class PageController extends Controller
         if ((int) $page->chapter_id !== (int) $chapter->id) {
             abort(404);
         }
+    }
+
+    protected function ensurePublishedContentRemainsReady(
+        Comic $comic,
+        Chapter $chapter,
+        ComicPublicationReadiness $readiness
+    ): void {
+        if ($chapter->is_published) {
+            $chapterResult = $readiness->evaluateChapter($chapter->fresh('pages'));
+
+            if (! $chapterResult['ready']) {
+                throw ValidationException::withMessages([
+                    'page_number' => ['This change would make the published chapter incomplete: '.implode(' ', $chapterResult['blockers'])],
+                ]);
+            }
+        }
+
     }
 
     protected function validatePage(Request $request, Chapter $chapter, ?Page $page): array
@@ -134,40 +211,5 @@ class PageController extends Controller
         }
 
         return $validated;
-    }
-
-    protected function handleUploadedMedia(?string $existingPath, $uploadedFile, string $directory, ?string $fallback = null): ?string
-    {
-        if ($uploadedFile instanceof \Illuminate\Http\UploadedFile) {
-            if ($existingPath && Storage::disk('public')->exists($existingPath)) {
-                Storage::disk('public')->delete($existingPath);
-            }
-
-            return $this->storeMediaFile($uploadedFile, $directory);
-        }
-
-        return is_string($fallback) && $fallback !== '' ? $fallback : $existingPath;
-    }
-
-    protected function storeMediaFile($uploadedFile, string $directory, ?string $fallback = null): ?string
-    {
-        if (! $uploadedFile) {
-            return is_string($fallback) && $fallback !== '' ? $fallback : null;
-        }
-
-        if (! $uploadedFile->isValid()) {
-            throw ValidationException::withMessages([
-                'image_path' => ['The uploaded file is invalid.'],
-            ]);
-        }
-
-        return $uploadedFile->storeAs($directory, $this->buildMediaFilename($uploadedFile, $directory), 'public');
-    }
-
-    protected function buildMediaFilename($uploadedFile, string $directory): string
-    {
-        $extension = strtolower($uploadedFile->getClientOriginalExtension() ?: 'jpg');
-
-        return 'media_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
     }
 }

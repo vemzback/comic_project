@@ -18,12 +18,15 @@ class HomeController extends Controller
                 'featuredComics' => collect(),
                 'latestComics' => collect(),
                 'latestChapters' => collect(),
+                'continueReading' => collect(),
                 'genres' => collect(),
             ]);
         }
 
         $featuredComics = Comic::query()
             ->with('genres')
+            ->withAvg('ratings', 'score')
+            ->withCount('ratings')
             ->where('is_featured', true)
             ->published()
             ->orderByDesc('published_at')
@@ -32,18 +35,41 @@ class HomeController extends Controller
 
         $latestComics = Comic::query()
             ->with('genres')
+            ->withAvg('ratings', 'score')
+            ->withCount('ratings')
             ->published()
             ->orderByDesc('published_at')
             ->limit(6)
             ->get();
 
-        $latestChapters = Chapter::query()
-            ->with('comic')
-            ->where('is_published', true)
-            ->whereHas('comic', fn ($query) => $query->published())
-            ->orderByDesc('published_at')
-            ->limit(5)
-            ->get();
+        $continueReading = collect();
+        $latestChapters = collect();
+
+        if (auth()->check()) {
+            if (Schema::hasTable('reading_history')) {
+                $continueReading = auth()->user()
+                    ->readingHistories()
+                    ->with(['comic', 'chapter'])
+                    ->whereNotNull('chapter_id')
+                    ->whereHas('comic', fn ($query) => $query->published())
+                    ->whereHas('chapter', fn ($query) => $query->where('is_published', true))
+                    ->latest('last_read_at')
+                    ->get()
+                    ->unique('comic_id')
+                    ->take(5)
+                    ->values();
+            }
+
+            if ($continueReading->isEmpty()) {
+                $latestChapters = Chapter::query()
+                    ->with('comic')
+                    ->where('is_published', true)
+                    ->whereHas('comic', fn ($query) => $query->published())
+                    ->orderByDesc('published_at')
+                    ->limit(5)
+                    ->get();
+            }
+        }
 
         $genres = Genre::query()
             ->withCount('comics')
@@ -51,22 +77,37 @@ class HomeController extends Controller
             ->limit(8)
             ->get();
 
-        return view('home', compact('featuredComics', 'latestComics', 'latestChapters', 'genres'));
+        return view('home', compact('featuredComics', 'latestComics', 'latestChapters', 'continueReading', 'genres'));
     }
 
     public function comics(): View
     {
         if (! Schema::hasTable('comics')) {
-            return view('public.comics', ['comics' => collect()]);
+            return view('public.comics', [
+                'comics' => collect(),
+                'heroComics' => collect(),
+            ]);
         }
+
+        $heroComics = Comic::query()
+            ->with('genres')
+            ->withAvg('ratings', 'score')
+            ->withCount('ratings')
+            ->published()
+            ->orderByDesc('is_featured')
+            ->orderByDesc('published_at')
+            ->limit(5)
+            ->get();
 
         $comics = Comic::query()
             ->with('genres')
+            ->withAvg('ratings', 'score')
+            ->withCount('ratings')
             ->published()
             ->orderByDesc('published_at')
             ->paginate(12);
 
-        return view('public.comics', compact('comics'));
+        return view('public.comics', compact('comics', 'heroComics'));
     }
 
     public function genres(): View
@@ -90,6 +131,8 @@ class HomeController extends Controller
         }
 
         $genreComics = $genre->comics()
+            ->withAvg('ratings', 'score')
+            ->withCount('ratings')
             ->published()
             ->orderByDesc('published_at')
             ->get();
@@ -109,7 +152,11 @@ class HomeController extends Controller
     public function search(Request $request): View
     {
         if (! Schema::hasTable('comics')) {
-            return view('public.search', ['query' => '', 'results' => collect()]);
+            return view('public.search', [
+                'query' => '',
+                'results' => collect(),
+                'topComics' => collect(),
+            ]);
         }
 
         $validated = $request->validate([
@@ -119,6 +166,8 @@ class HomeController extends Controller
 
         $results = Comic::query()
             ->with('genres')
+            ->withAvg('ratings', 'score')
+            ->withCount('ratings')
             ->when($query !== '', function ($q) use ($query) {
                 $q->where(function ($inner) use ($query) {
                     $inner->where('title', 'like', "%{$query}%")
@@ -131,6 +180,18 @@ class HomeController extends Controller
             ->limit(12)
             ->get();
 
-        return view('public.search', compact('query', 'results'));
+        $topComics = $query === ''
+            ? Comic::query()
+                ->withAvg('ratings', 'score')
+                ->withCount('ratings')
+                ->published()
+                ->orderByDesc('ratings_avg_score')
+                ->orderByDesc('ratings_count')
+                ->orderByDesc('published_at')
+                ->limit(5)
+                ->get()
+            : collect();
+
+        return view('public.search', compact('query', 'results', 'topComics'));
     }
 }

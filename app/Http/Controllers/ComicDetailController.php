@@ -21,8 +21,15 @@ class ComicDetailController extends Controller
             },
             'genres',
             'comments' => function ($query) {
-                $query->where('is_approved', true)
-                    ->with('user')
+                $query->whereNull('parent_id')
+                    ->where('is_approved', true)
+                    ->with([
+                        'user',
+                        'replies' => fn ($replyQuery) => $replyQuery
+                            ->where('is_approved', true)
+                            ->with('user')
+                            ->oldest(),
+                    ])
                     ->latest();
             },
         ]);
@@ -32,7 +39,16 @@ class ComicDetailController extends Controller
         $userRating = auth()->check() ? $comic->ratings()->where('user_id', auth()->id())->first() : null;
         $averageRating = $comic->ratings()->average('score');
         $ratingCount = $comic->ratings()->count();
+        $continueReadingHistory = auth()->check()
+            ? auth()->user()->readingHistories()
+                ->with('chapter')
+                ->where('comic_id', $comic->id)
+                ->whereNotNull('chapter_id')
+                ->whereHas('chapter', fn ($query) => $query->where('is_published', true))
+                ->latest('last_read_at')
+                ->first()
+            : null;
 
-        return view('public.comic-detail', compact('comic', 'publishedChaptersCount', 'userRating', 'averageRating', 'ratingCount'));
+        return view('public.comic-detail', compact('comic', 'publishedChaptersCount', 'userRating', 'averageRating', 'ratingCount', 'continueReadingHistory'));
     }
 }

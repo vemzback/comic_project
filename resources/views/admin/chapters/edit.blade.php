@@ -23,6 +23,22 @@
             </div>
         @endif
 
+        <section class="admin-card chapter-readiness {{ $chapterReadiness['ready'] ? 'publication-readiness-ready' : 'publication-readiness-blocked' }}">
+            <div>
+                <p class="eyebrow">Publishing Safety</p>
+                <h2>{{ $chapterReadiness['ready'] ? 'Chapter ready to publish' : 'Chapter not ready yet' }}</h2>
+            </div>
+            @if (! $chapterReadiness['ready'])
+                <ul>
+                    @foreach ($chapterReadiness['blockers'] as $blocker)
+                        <li>{{ ucfirst($blocker) }}</li>
+                    @endforeach
+                </ul>
+            @else
+                <p>Its publication date, page order, and stored images have passed the required checks.</p>
+            @endif
+        </section>
+
         <form method="POST" action="{{ route('admin.comics.chapters.update', [$comic, $chapter]) }}" class="admin-card admin-form">
             @csrf
             @method('PUT')
@@ -70,6 +86,7 @@
                             <input id="is_published" type="checkbox" name="is_published" value="1" {{ old('is_published', $chapter->is_published) ? 'checked' : '' }}>
                             <span>Published chapter</span>
                         </label>
+                        <small class="admin-field-help">Publishing is accepted only when all chapter readiness checks pass.</small>
                         @error('is_published') <span class="form-error" role="alert">{{ $message }}</span> @enderror
                     </div>
                 </div>

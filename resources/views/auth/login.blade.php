@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Login | Comic Project')
+@section('title', 'Login | zYx comic')
 
 @section('content')
     <div class="auth-shell">
@@ -9,6 +9,10 @@
                 <p class="eyebrow">Welcome back</p>
                 <h1>Sign in to continue reading</h1>
             </div>
+
+            @if (session('status'))
+                <div class="form-success" role="status">{{ session('status') }}</div>
+            @endif
 
             @if ($errors->any())
                 <div class="form-error-box" role="alert">
@@ -37,6 +41,10 @@
                     @error('password')
                         <span class="form-error" role="alert">{{ $message }}</span>
                     @enderror
+                </div>
+
+                <div class="auth-help-row">
+                    <a href="{{ route('password.request') }}">Forgot password?</a>
                 </div>
 
                 <button type="submit" class="btn btn-primary auth-submit">Sign In</button>

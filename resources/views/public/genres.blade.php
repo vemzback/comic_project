@@ -1,10 +1,11 @@
 @extends('layouts.app')
 
-@section('title', isset($selectedGenre) ? $selectedGenre->name . ' | Comic Project' : 'Genres | Comic Project')
+@section('title', isset($selectedGenre) ? $selectedGenre->name . ' | zYx comic' : 'Genres | zYx comic')
 
 @section('content')
     <section class="page-header">
         <div class="container">
+            <p class="eyebrow">Browse the archive</p>
             <h1>{{ isset($selectedGenre) ? $selectedGenre->name : 'Genres' }}</h1>
             <p>{{ isset($selectedGenre) ? 'Browse comics in this genre.' : 'Explore comics by genre.' }}</p>
         </div>
@@ -21,23 +22,9 @@
                 @if ($genreComics->isEmpty())
                     <p class="empty-state">No comics published in this genre yet.</p>
                 @else
-                    <div class="card-grid three-up">
+                    <div class="card-grid four-up">
                         @foreach ($genreComics as $comic)
-                            <a href="{{ route('comic.detail', $comic) }}" class="comic-card comic-card-link">
-                                <div class="comic-cover-wrap">
-                                    <img src="{{ $comic->cover_image && Storage::disk('public')->exists($comic->cover_image) ? Storage::disk('public')->url($comic->cover_image) : asset('images/media-placeholder.svg') }}" alt="{{ $comic->cover_image && Storage::disk('public')->exists($comic->cover_image) ? $comic->title . ' cover' : $comic->title . ' cover unavailable' }}" class="comic-cover">
-                                </div>
-                                <div class="comic-body">
-                                    <div class="meta-row">
-                                        <span class="badge">{{ ucfirst($comic->status) }}</span>
-                                        @if ($comic->published_at)
-                                            <span>{{ $comic->published_at->format('M d, Y') }}</span>
-                                        @endif
-                                    </div>
-                                    <h3>{{ $comic->title }}</h3>
-                                    <p>{{ Str::limit($comic->description ?? '', 130) }}</p>
-                                </div>
-                            </a>
+                            @include('public.partials.comic-card', ['comic' => $comic, 'showGenres' => false])
                         @endforeach
                     </div>
                 @endif

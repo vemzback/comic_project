@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -13,20 +13,29 @@ class Comic extends Model
     use HasFactory;
 
     protected $fillable = [
+        'external_provider',
+        'external_id',
+        'source_url',
         'title',
         'slug',
         'description',
+        'author',
+        'publisher',
+        'original_published_at',
         'cover_image',
         'status',
         'published_at',
         'is_featured',
         'seo_title',
         'seo_description',
+        'source_metadata',
     ];
 
     protected $casts = [
         'published_at' => 'datetime',
+        'original_published_at' => 'date',
         'is_featured' => 'boolean',
+        'source_metadata' => 'array',
     ];
 
     public function scopePublished(Builder $query): Builder

@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\VerifyCsrfToken;
 use App\Models\Chapter;
 use App\Models\Comic;
 use App\Models\Comment;
 use App\Models\Page;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class CommentTest extends TestCase
@@ -15,7 +17,9 @@ class CommentTest extends TestCase
     use RefreshDatabase;
 
     private Comic $comic;
+
     private User $user;
+
     private User $otherUser;
 
     protected function setUp(): void
@@ -53,6 +57,33 @@ class CommentTest extends TestCase
         $response->assertSee($this->user->name);
     }
 
+    public function test_comment_displays_relative_time_and_author_profile_photo(): void
+    {
+        Storage::fake('public');
+        $avatarPath = 'profile-photos/comment-author.jpg';
+        Storage::disk('public')->put($avatarPath, 'profile photo');
+        $this->user->update([
+            'name' => 'Comment Author',
+            'avatar_path' => $avatarPath,
+        ]);
+
+        $comment = Comment::create([
+            'user_id' => $this->user->id,
+            'comic_id' => $this->comic->id,
+            'body' => 'Comment with visible author profile.',
+            'is_approved' => true,
+            'created_at' => now()->subMinutes(5),
+        ]);
+
+        $this->get(route('comic.detail', $this->comic))
+            ->assertOk()
+            ->assertSee('Comment Author')
+            ->assertSee('Member')
+            ->assertSee($comment->created_at->diffForHumans())
+            ->assertSee(Storage::disk('public')->url($avatarPath), false)
+            ->assertSee('class="comment-avatar comment-avatar-photo"', false);
+    }
+
     /**
      * Test 2: Unapproved comments are not displayed publicly
      */
@@ -77,6 +108,39 @@ class CommentTest extends TestCase
         $response->assertOk();
         $response->assertSee($approvedComment->body);
         $response->assertDontSee($unapprovedComment->body);
+    }
+
+    public function test_comment_feed_returns_latest_visible_thread_without_cache(): void
+    {
+        $parent = Comment::create([
+            'user_id' => $this->user->id,
+            'comic_id' => $this->comic->id,
+            'body' => 'Visible feed parent.',
+            'is_approved' => true,
+        ]);
+
+        Comment::create([
+            'user_id' => $this->otherUser->id,
+            'comic_id' => $this->comic->id,
+            'parent_id' => $parent->id,
+            'body' => 'Visible feed reply.',
+            'is_approved' => true,
+        ]);
+
+        Comment::create([
+            'user_id' => $this->otherUser->id,
+            'comic_id' => $this->comic->id,
+            'body' => 'Hidden feed comment.',
+            'is_approved' => false,
+        ]);
+
+        $response = $this->get(route('comments.feed', $this->comic));
+
+        $response->assertOk()
+            ->assertHeader('Cache-Control', 'no-store, private')
+            ->assertSee('Visible feed parent.')
+            ->assertSee('Visible feed reply.')
+            ->assertDontSee('Hidden feed comment.');
     }
 
     /**
@@ -119,7 +183,7 @@ class CommentTest extends TestCase
     /**
      * Test 5: Authenticated user can create a comment
      */
-    public function test_authenticated_user_can_create_a_comment(): void
+    public function test_authenticated_user_can_create_an_immediately_visible_comment(): void
     {
         $commentBody = 'This is an amazing comic series!';
 
@@ -134,6 +198,36 @@ class CommentTest extends TestCase
             'user_id' => $this->user->id,
             'comic_id' => $this->comic->id,
             'body' => $commentBody,
+            'is_approved' => true,
+        ]);
+
+        $this->actingAs($this->user)
+            ->get(route('comic.detail', $this->comic))
+            ->assertOk()
+            ->assertSee($commentBody);
+    }
+
+    public function test_ajax_comment_submission_returns_json_without_page_redirect(): void
+    {
+        $commentBody = 'Comment submitted through AJAX.';
+
+        $response = $this->actingAs($this->user)
+            ->withHeaders([
+                'Accept' => 'application/json',
+                'X-Requested-With' => 'XMLHttpRequest',
+            ])
+            ->post(route('comments.store', $this->comic), [
+                'body' => $commentBody,
+            ]);
+
+        $response->assertCreated()
+            ->assertJson(['message' => 'Comment posted successfully.']);
+
+        $this->assertDatabaseHas('comments', [
+            'comic_id' => $this->comic->id,
+            'user_id' => $this->user->id,
+            'body' => $commentBody,
+            'is_approved' => true,
         ]);
     }
 
@@ -171,6 +265,91 @@ class CommentTest extends TestCase
 
         $this->assertNotNull($comment);
         $this->assertEquals($this->comic->id, $comment->comic_id);
+    }
+
+    public function test_authenticated_user_can_reply_and_reply_is_immediately_visible(): void
+    {
+        $parent = Comment::create([
+            'user_id' => $this->user->id,
+            'comic_id' => $this->comic->id,
+            'body' => 'What did you think about this chapter?',
+            'is_approved' => true,
+        ]);
+
+        $replyBody = 'I liked the final scene.';
+
+        $response = $this->actingAs($this->otherUser)
+            ->post(route('comments.store', $this->comic), [
+                'body' => $replyBody,
+                'parent_id' => $parent->id,
+            ]);
+
+        $response->assertRedirect(route('comic.detail', $this->comic));
+        $this->assertDatabaseHas('comments', [
+            'user_id' => $this->otherUser->id,
+            'comic_id' => $this->comic->id,
+            'parent_id' => $parent->id,
+            'body' => $replyBody,
+            'is_approved' => true,
+        ]);
+
+        $this->get(route('comic.detail', $this->comic))
+            ->assertOk()
+            ->assertSee($parent->body)
+            ->assertSee($replyBody)
+            ->assertSee($this->otherUser->name);
+    }
+
+    public function test_user_cannot_reply_to_comment_from_another_comic(): void
+    {
+        $otherComic = Comic::factory()->create([
+            'status' => 'ongoing',
+            'published_at' => now(),
+        ]);
+
+        $foreignComment = Comment::create([
+            'user_id' => $this->otherUser->id,
+            'comic_id' => $otherComic->id,
+            'body' => 'Comment on another comic.',
+            'is_approved' => true,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->post(route('comments.store', $this->comic), [
+                'body' => 'Invalid cross-comic reply.',
+                'parent_id' => $foreignComment->id,
+            ]);
+
+        $response->assertSessionHasErrors('parent_id');
+        $this->assertDatabaseMissing('comments', [
+            'comic_id' => $this->comic->id,
+            'body' => 'Invalid cross-comic reply.',
+        ]);
+    }
+
+    public function test_deleting_parent_comment_also_deletes_its_replies(): void
+    {
+        $parent = Comment::create([
+            'user_id' => $this->user->id,
+            'comic_id' => $this->comic->id,
+            'body' => 'Parent comment.',
+            'is_approved' => true,
+        ]);
+
+        $reply = Comment::create([
+            'user_id' => $this->otherUser->id,
+            'comic_id' => $this->comic->id,
+            'parent_id' => $parent->id,
+            'body' => 'Reply that should be removed with its parent.',
+            'is_approved' => true,
+        ]);
+
+        $this->actingAs($this->user)
+            ->delete(route('comments.destroy', $parent))
+            ->assertRedirect(route('comic.detail', $this->comic));
+
+        $this->assertDatabaseMissing('comments', ['id' => $parent->id]);
+        $this->assertDatabaseMissing('comments', ['id' => $reply->id]);
     }
 
     /**
@@ -253,6 +432,28 @@ class CommentTest extends TestCase
         $this->assertDatabaseMissing('comments', [
             'id' => $comment->id,
         ]);
+    }
+
+    public function test_ajax_comment_deletion_returns_json(): void
+    {
+        $comment = Comment::create([
+            'user_id' => $this->user->id,
+            'comic_id' => $this->comic->id,
+            'body' => 'AJAX deletion target.',
+            'is_approved' => true,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->withHeaders([
+                'Accept' => 'application/json',
+                'X-Requested-With' => 'XMLHttpRequest',
+            ])
+            ->delete(route('comments.destroy', $comment));
+
+        $response->assertOk()
+            ->assertJson(['message' => 'Comment deleted.']);
+
+        $this->assertDatabaseMissing('comments', ['id' => $comment->id]);
     }
 
     /**
@@ -352,7 +553,7 @@ class CommentTest extends TestCase
      */
     public function test_comment_actions_require_csrf_protection(): void
     {
-        $this->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class);
+        $this->withoutMiddleware(VerifyCsrfToken::class);
 
         $response = $this->actingAs($this->user)
             ->post(route('comments.store', $this->comic), [
@@ -360,7 +561,7 @@ class CommentTest extends TestCase
             ]);
 
         // Re-enable CSRF check and verify that without CSRF token, request fails
-        $this->withMiddleware(\App\Http\Middleware\VerifyCsrfToken::class);
+        $this->withMiddleware(VerifyCsrfToken::class);
 
         $response = $this->actingAs($this->user)
             ->post(route('comments.store', $this->comic), [
@@ -372,10 +573,8 @@ class CommentTest extends TestCase
         $response = $this->actingAs($this->user)
             ->get(route('comic.detail', $this->comic));
 
-        if ($response->getStatusCode() === 200) {
-            // If form exists, it should have CSRF token
-            $response->assertSee('@csrf');
-        }
+        $response->assertOk();
+        $response->assertSee('name="_token"', false);
     }
 
     /**

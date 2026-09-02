@@ -20,6 +20,16 @@
             <div class="form-success" role="status">{{ session('success') }}</div>
         @endif
 
+        @if ($errors->any())
+            <div class="form-error-box" role="alert">
+                <ul class="form-error-list">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         @if ($chapters->isEmpty())
             <section class="admin-card admin-empty-state">
                 <h2>No chapters found</h2>
@@ -62,11 +72,13 @@
                                             <a href="{{ route('admin.comics.chapters.show', [$comic, $chapter]) }}" class="btn btn-secondary">View</a>
                                             <a href="{{ route('admin.comics.chapters.edit', [$comic, $chapter]) }}" class="btn btn-secondary">Edit</a>
                                             <a href="{{ route('admin.comics.chapters.pages.index', [$comic, $chapter]) }}" class="btn btn-secondary">Pages</a>
-                                            <form method="POST" action="{{ route('admin.comics.chapters.destroy', [$comic, $chapter]) }}" class="inline-form">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this chapter?')">Delete</button>
-                                            </form>
+                                            @if (! $comic->published_at || ! $chapter->is_published)
+                                                <form method="POST" action="{{ route('admin.comics.chapters.destroy', [$comic, $chapter]) }}" class="inline-form">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this chapter?')">Delete</button>
+                                                </form>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>

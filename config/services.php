@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'comic_metadata' => [
+        'anilist_endpoint' => env('ANILIST_API_URL', 'https://graphql.anilist.co'),
+        'google_books_endpoint' => env('GOOGLE_BOOKS_API_URL', 'https://www.googleapis.com/books/v1/volumes'),
+        'google_books_key' => env('GOOGLE_BOOKS_API_KEY'),
+    ],
+
 ];

@@ -14,14 +14,12 @@
     <section class="section-block">
         <div class="container">
             @if (session('success'))
-                <div class="alert success" style="margin-bottom:1.5rem; background:#ecfdf5; border:1px solid #a7f3d0; color:#166534; padding:0.75rem 1rem; border-radius:12px;">
-                    {{ session('success') }}
-                </div>
+                <div class="form-success" role="status">{{ session('success') }}</div>
             @endif
 
             @if ($bookmarks->isEmpty())
-                <div class="empty-state" style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:2rem; text-align:center;">
-                    <p style="margin:0; font-size:1.05rem; color:#4b5563;">You have no bookmarks yet.</p>
+                <div class="empty-state bookmark-empty-state">
+                    <p>You have no bookmarks yet.</p>
                 </div>
             @else
                 <div class="card-grid four-up">
@@ -43,11 +41,11 @@
                                     </div>
                                 </a>
 
-                                <div class="comic-body" style="padding-top:0;">
+                                <div class="comic-body bookmark-card-actions">
                                     <form method="POST" action="{{ route('bookmarks.destroy', $comic) }}">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-danger" style="width:100%;">Remove Bookmark</button>
+                                        <button type="submit" class="btn btn-danger btn-block">Remove Bookmark</button>
                                     </form>
                                 </div>
                             </article>

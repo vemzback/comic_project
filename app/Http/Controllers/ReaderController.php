@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Chapter;
 use App\Models\Comic;
 use App\Models\ReadingHistory;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ReaderController extends Controller
@@ -31,18 +34,25 @@ class ReaderController extends Controller
             ->orderBy('page_number')
             ->get();
 
-        // Determine current page
-        $currentPageNumber = request()->query('page', null);
-        $currentPage = null;
+        // Prefer an explicit page, then restore the authenticated reader's saved page.
+        $requestedPageNumber = request()->query('page');
+        $currentPageNumber = $pages->first()?->page_number;
 
-        if ($currentPageNumber !== null) {
-            // Validate page is within chapter
-            $currentPage = $pages->firstWhere('page_number', (int) $currentPageNumber);
-            if ($currentPage === null) {
-                // Invalid page number, default to first page
-                $currentPageNumber = null;
-            }
+        if ($requestedPageNumber !== null) {
+            $requestedPage = $pages->firstWhere('page_number', (int) $requestedPageNumber);
+            $currentPageNumber = $requestedPage?->page_number ?? $currentPageNumber;
+        } elseif (Auth::check()) {
+            $savedPageNumber = ReadingHistory::query()
+                ->where('user_id', Auth::id())
+                ->where('comic_id', $comic->id)
+                ->where('chapter_id', $chapter->id)
+                ->value('page_number');
+
+            $savedPage = $pages->firstWhere('page_number', $savedPageNumber);
+            $currentPageNumber = $savedPage?->page_number ?? $currentPageNumber;
         }
+
+        $currentPage = $pages->firstWhere('page_number', $currentPageNumber);
 
         // If authenticated, record reading history
         if (Auth::check()) {
@@ -89,5 +99,42 @@ class ReaderController extends Controller
             ->first();
 
         return view('public.reader', compact('comic', 'chapter', 'pages', 'previousChapter', 'nextChapter', 'currentPageNumber', 'currentPage'));
+    }
+
+    public function progress(Request $request, Comic $comic, Chapter $chapter): JsonResponse
+    {
+        if (! $comic->published_at || $comic->published_at->isFuture()) {
+            abort(404);
+        }
+
+        if ($chapter->comic_id !== $comic->id || ! $chapter->is_published) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'page_number' => [
+                'required',
+                'integer',
+                Rule::exists('pages', 'page_number')->where('chapter_id', $chapter->id),
+            ],
+        ]);
+
+        $history = ReadingHistory::updateOrCreate(
+            [
+                'user_id' => $request->user()->id,
+                'comic_id' => $comic->id,
+                'chapter_id' => $chapter->id,
+            ],
+            [
+                'page_number' => $validated['page_number'],
+                'last_read_at' => now(),
+            ]
+        );
+
+        return response()->json([
+            'message' => 'Reading position saved.',
+            'page_number' => $history->page_number,
+            'last_read_at' => $history->last_read_at->toIso8601String(),
+        ]);
     }
 }

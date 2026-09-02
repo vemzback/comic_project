@@ -16,7 +16,7 @@ class AdminChapterPageCrudTest extends TestCase
 
     public function test_guest_cannot_access_chapter_management(): void
     {
-        $comic = Comic::factory()->create();
+        $comic = Comic::factory()->create(['published_at' => null]);
 
         $this->get("/admin/comics/{$comic->id}/chapters")->assertRedirect('/login');
     }
@@ -52,7 +52,6 @@ class AdminChapterPageCrudTest extends TestCase
             'title' => 'Chapter One',
             'slug' => 'chapter-one',
             'sort_order' => 1,
-            'is_published' => '1',
             'published_at' => '2026-08-15',
         ]);
 
@@ -61,14 +60,14 @@ class AdminChapterPageCrudTest extends TestCase
             'comic_id' => $comic->id,
             'chapter_number' => 1,
             'slug' => 'chapter-one',
-            'is_published' => true,
+            'is_published' => false,
         ]);
     }
 
     public function test_chapter_validation_rejects_missing_and_duplicate_values(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $comic = Comic::factory()->create();
+        $comic = Comic::factory()->create(['published_at' => null]);
         Chapter::factory()->create([
             'comic_id' => $comic->id,
             'chapter_number' => 1,
@@ -119,8 +118,7 @@ class AdminChapterPageCrudTest extends TestCase
                 'title' => 'Updated title',
                 'slug' => 'updated-title',
                 'sort_order' => 5,
-                'is_published' => '1',
-                'published_at' => '2026-08-20',
+                'published_at' => null,
             ])
             ->assertRedirect(route('admin.comics.chapters.index', $comic));
 
@@ -128,14 +126,14 @@ class AdminChapterPageCrudTest extends TestCase
         $this->assertSame(2, $chapter->chapter_number);
         $this->assertSame('Updated title', $chapter->title);
         $this->assertSame('updated-title', $chapter->slug);
-        $this->assertTrue((bool) $chapter->is_published);
+        $this->assertFalse((bool) $chapter->is_published);
     }
 
     public function test_admin_can_delete_a_chapter(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $comic = Comic::factory()->create();
-        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $comic = Comic::factory()->create(['published_at' => null]);
+        $chapter = Chapter::factory()->create(['comic_id' => $comic->id, 'is_published' => false]);
 
         $this->actingAs($admin)
             ->delete("/admin/comics/{$comic->id}/chapters/{$chapter->id}")
@@ -147,8 +145,8 @@ class AdminChapterPageCrudTest extends TestCase
     public function test_deleting_chapter_preserves_history_as_null(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $comic = Comic::factory()->create();
-        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $comic = Comic::factory()->create(['published_at' => null]);
+        $chapter = Chapter::factory()->create(['comic_id' => $comic->id, 'is_published' => false]);
         $history = ReadingHistory::create([
             'user_id' => $admin->id,
             'comic_id' => $comic->id,
@@ -169,9 +167,9 @@ class AdminChapterPageCrudTest extends TestCase
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $otherUser = User::factory()->create();
-        $comic = Comic::factory()->create();
+        $comic = Comic::factory()->create(['published_at' => null]);
         $otherComic = Comic::factory()->create();
-        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $chapter = Chapter::factory()->create(['comic_id' => $comic->id, 'is_published' => false]);
         $otherChapter = Chapter::factory()->create(['comic_id' => $otherComic->id]);
         $nullHistory = ReadingHistory::create([
             'user_id' => $admin->id,
@@ -231,8 +229,8 @@ class AdminChapterPageCrudTest extends TestCase
 
     public function test_guest_cannot_access_page_management(): void
     {
-        $comic = Comic::factory()->create();
-        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $comic = Comic::factory()->create(['published_at' => null]);
+        $chapter = Chapter::factory()->create(['comic_id' => $comic->id, 'is_published' => false]);
 
         $this->get("/admin/comics/{$comic->id}/chapters/{$chapter->id}/pages")->assertRedirect('/login');
     }
@@ -240,8 +238,8 @@ class AdminChapterPageCrudTest extends TestCase
     public function test_regular_user_receives_forbidden_for_page_management(): void
     {
         $user = User::factory()->create(['role' => 'user']);
-        $comic = Comic::factory()->create();
-        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $comic = Comic::factory()->create(['published_at' => null]);
+        $chapter = Chapter::factory()->create(['comic_id' => $comic->id, 'is_published' => false]);
 
         $this->actingAs($user)
             ->get("/admin/comics/{$comic->id}/chapters/{$chapter->id}/pages")
@@ -251,8 +249,8 @@ class AdminChapterPageCrudTest extends TestCase
     public function test_admin_can_view_and_create_pages(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $comic = Comic::factory()->create();
-        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $comic = Comic::factory()->create(['published_at' => null]);
+        $chapter = Chapter::factory()->create(['comic_id' => $comic->id, 'is_published' => false]);
 
         $this->actingAs($admin)
             ->get("/admin/comics/{$comic->id}/chapters/{$chapter->id}/pages")
@@ -275,8 +273,8 @@ class AdminChapterPageCrudTest extends TestCase
     public function test_page_validation_rejects_invalid_data_and_duplicate_numbers(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $comic = Comic::factory()->create();
-        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $comic = Comic::factory()->create(['published_at' => null]);
+        $chapter = Chapter::factory()->create(['comic_id' => $comic->id, 'is_published' => false]);
         Page::factory()->create(['chapter_id' => $chapter->id, 'page_number' => 1, 'image_path' => 'pages/existing/01.jpg']);
 
         $this->actingAs($admin)
@@ -292,8 +290,8 @@ class AdminChapterPageCrudTest extends TestCase
     public function test_admin_can_edit_and_update_a_page(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $comic = Comic::factory()->create();
-        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $comic = Comic::factory()->create(['published_at' => null]);
+        $chapter = Chapter::factory()->create(['comic_id' => $comic->id, 'is_published' => false]);
         $page = Page::factory()->create(['chapter_id' => $chapter->id, 'page_number' => 1, 'image_path' => 'pages/old/01.jpg']);
 
         $this->actingAs($admin)
@@ -313,8 +311,8 @@ class AdminChapterPageCrudTest extends TestCase
     public function test_admin_can_delete_a_page(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $comic = Comic::factory()->create();
-        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $comic = Comic::factory()->create(['published_at' => null]);
+        $chapter = Chapter::factory()->create(['comic_id' => $comic->id, 'is_published' => false]);
         $page = Page::factory()->create(['chapter_id' => $chapter->id]);
 
         $this->actingAs($admin)
@@ -346,8 +344,8 @@ class AdminChapterPageCrudTest extends TestCase
     public function test_chapter_delete_handles_related_pages_safely(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $comic = Comic::factory()->create();
-        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $comic = Comic::factory()->create(['published_at' => null]);
+        $chapter = Chapter::factory()->create(['comic_id' => $comic->id, 'is_published' => false]);
         $page = Page::factory()->create(['chapter_id' => $chapter->id]);
 
         $this->actingAs($admin)

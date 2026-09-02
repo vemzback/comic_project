@@ -27,7 +27,7 @@ class AuthFlowTest extends TestCase
             'password_confirmation' => 'Password123!',
         ]);
 
-        $response->assertRedirect('/');
+        $response->assertRedirect(route('verification.notice'));
         $this->assertDatabaseHas('users', [
             'email' => 'newreader@example.com',
             'role' => 'user',
@@ -35,6 +35,7 @@ class AuthFlowTest extends TestCase
 
         $user = User::where('email', 'newreader@example.com')->firstOrFail();
         $this->assertTrue(Hash::check('Password123!', $user->password));
+        $this->assertNull($user->email_verified_at);
         $this->assertAuthenticatedAs($user);
     }
 
@@ -42,7 +43,7 @@ class AuthFlowTest extends TestCase
     {
         $this->get('/login')
             ->assertOk()
-            ->assertSee('Comic Project')
+            ->assertSee('zYx comic')
             ->assertSee('Welcome back')
             ->assertSee('Sign in to continue reading')
             ->assertSee('Email')
@@ -55,7 +56,7 @@ class AuthFlowTest extends TestCase
     {
         $this->get('/register')
             ->assertOk()
-            ->assertSee('Comic Project')
+            ->assertSee('zYx comic')
             ->assertSee('Create your account')
             ->assertSee('Start reading and saving comics')
             ->assertSee('Name')
@@ -174,7 +175,11 @@ class AuthFlowTest extends TestCase
             ->get('/profile')
             ->assertOk()
             ->assertSee('Profile User')
-            ->assertSee('profile@example.com');
+            ->assertSee('profile@example.com')
+            ->assertSee('Your comic journey')
+            ->assertSee('Reading dashboard')
+            ->assertSee('My Bookmarks')
+            ->assertSee('Account Security');
     }
 
     public function test_user_cannot_change_own_role_via_profile_update(): void

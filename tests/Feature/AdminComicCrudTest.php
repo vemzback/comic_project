@@ -36,6 +36,27 @@ class AdminComicCrudTest extends TestCase
             ->assertSee('Comic Management');
     }
 
+    public function test_admin_can_view_comic_details(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $genre = Genre::factory()->create(['name' => 'Adventure', 'slug' => 'adventure']);
+        $comic = Comic::factory()->create([
+            'title' => 'Skybound Journey',
+            'slug' => 'skybound-journey',
+            'seo_title' => 'Skybound Journey Comic',
+        ]);
+        $comic->genres()->attach($genre);
+
+        $this->actingAs($admin)
+            ->get(route('admin.comics.show', $comic))
+            ->assertOk()
+            ->assertSee('Skybound Journey')
+            ->assertSee('Comic Details')
+            ->assertSee('Adventure')
+            ->assertSee('Search Preview Content')
+            ->assertSee('Skybound Journey Comic');
+    }
+
     public function test_admin_can_create_a_comic_with_genres(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
@@ -48,7 +69,6 @@ class AdminComicCrudTest extends TestCase
             'description' => 'A city full of secrets and danger.',
             'cover_image' => 'covers/shadow-of-the-city.jpg',
             'status' => 'ongoing',
-            'published_at' => '2026-08-15',
             'is_featured' => '1',
             'seo_title' => 'Shadow of the City',
             'seo_description' => 'A feature-rich comic about urban danger.',
@@ -90,7 +110,7 @@ class AdminComicCrudTest extends TestCase
             'title' => 'Old Title',
             'slug' => 'old-title',
             'status' => 'ongoing',
-            'published_at' => now(),
+            'published_at' => null,
         ]);
 
         $this->actingAs($admin)
@@ -100,7 +120,6 @@ class AdminComicCrudTest extends TestCase
                 'description' => 'Updated description.',
                 'cover_image' => 'covers/updated-title.jpg',
                 'status' => 'completed',
-                'published_at' => '2026-07-01',
                 'is_featured' => '1',
                 'seo_title' => 'Updated SEO Title',
                 'seo_description' => 'Updated SEO description',
@@ -121,16 +140,11 @@ class AdminComicCrudTest extends TestCase
     {
         $admin = User::factory()->create(['role' => 'admin']);
 
-        $this->actingAs($admin)
-            ->post('/admin/comics', [
-                'title' => 'Scheduled Comic',
-                'slug' => 'scheduled-comic',
-                'status' => 'ongoing',
-                'published_at' => now()->addDay()->toDateTimeString(),
-            ])
-            ->assertRedirect(route('admin.comics.index'));
-
-        $comic = Comic::query()->where('slug', 'scheduled-comic')->firstOrFail();
+        $comic = Comic::factory()->create([
+            'title' => 'Scheduled Comic',
+            'slug' => 'scheduled-comic',
+            'published_at' => now()->addDay(),
+        ]);
 
         $this->actingAs($admin)
             ->get(route('admin.comics.edit', $comic))
@@ -175,7 +189,7 @@ class AdminComicCrudTest extends TestCase
     public function test_admin_can_delete_a_comic(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $comic = Comic::factory()->create();
+        $comic = Comic::factory()->create(['published_at' => null]);
 
         $this->actingAs($admin)
             ->delete("/admin/comics/{$comic->id}")

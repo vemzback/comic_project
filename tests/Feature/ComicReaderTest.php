@@ -6,6 +6,9 @@ use App\Models\Chapter;
 use App\Models\Comic;
 use App\Models\Genre;
 use App\Models\Page;
+use App\Models\Rating;
+use App\Models\ReadingHistory;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -24,7 +27,103 @@ class ComicReaderTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee($comic->title);
+        $response->assertSee('data-expandable-description', false);
+        $response->assertSee('Selengkapnya');
         $response->assertViewHas('comic', $comic);
+    }
+
+    public function test_google_books_comic_detail_offers_a_lazy_embedded_preview(): void
+    {
+        $comic = Comic::factory()->create([
+            'external_provider' => 'google_books',
+            'external_id' => 'google-volume-1',
+            'source_url' => 'https://books.google.com/books?id=google-volume-1',
+            'source_metadata' => [
+                'preview' => [
+                    'embeddable' => true,
+                    'web_reader_url' => 'https://play.google.com/books/reader?id=google-volume-1',
+                ],
+            ],
+            'published_at' => now(),
+        ]);
+
+        $this->get(route('comic.detail', $comic))
+            ->assertOk()
+            ->assertSee('Preview on Google Books')
+            ->assertSee('data-google-books-preview', false)
+            ->assertSee('data-volume-id="google-volume-1"', false)
+            ->assertSee('https://www.google.com/books/jsapi.js', false)
+            ->assertSee('window.zyxGoogleBooksReady', false)
+            ->assertSee('href="https://play.google.com/books/reader?id=google-volume-1"', false);
+    }
+
+    public function test_legacy_google_books_import_without_preview_metadata_can_still_request_preview(): void
+    {
+        $comic = Comic::factory()->create([
+            'external_provider' => 'google_books',
+            'external_id' => 'legacy-google-volume',
+            'source_metadata' => null,
+            'published_at' => now(),
+        ]);
+
+        $this->get(route('comic.detail', $comic))
+            ->assertOk()
+            ->assertSee('Preview on Google Books')
+            ->assertSee('data-volume-id="legacy-google-volume"', false);
+    }
+
+    public function test_non_embeddable_google_books_comic_does_not_offer_embedded_preview(): void
+    {
+        $comic = Comic::factory()->create([
+            'external_provider' => 'google_books',
+            'external_id' => 'restricted-google-volume',
+            'source_metadata' => ['preview' => ['embeddable' => false]],
+            'published_at' => now(),
+        ]);
+
+        $this->get(route('comic.detail', $comic))
+            ->assertOk()
+            ->assertDontSee('Preview on Google Books')
+            ->assertDontSee('data-google-books-preview', false)
+            ->assertDontSee('https://www.google.com/books/jsapi.js', false);
+    }
+
+    public function test_catalog_carousel_prioritizes_featured_then_recent_published_comics(): void
+    {
+        $featured = Comic::factory()->create([
+            'title' => 'Featured Slider Comic',
+            'slug' => 'featured-slider-comic',
+            'is_featured' => true,
+            'published_at' => now()->subMonth(),
+        ]);
+
+        $recent = Comic::factory()->create([
+            'title' => 'Recent Slider Comic',
+            'slug' => 'recent-slider-comic',
+            'is_featured' => false,
+            'published_at' => now(),
+        ]);
+
+        $future = Comic::factory()->create([
+            'title' => 'Future Slider Comic',
+            'slug' => 'future-slider-comic',
+            'is_featured' => true,
+            'published_at' => now()->addDay(),
+        ]);
+
+        $response = $this->get(route('comics'));
+
+        $response
+            ->assertOk()
+            ->assertSee('data-catalog-slider', false)
+            ->assertSee($featured->title)
+            ->assertSee($recent->title)
+            ->assertDontSee($future->title)
+            ->assertViewHas('heroComics', function ($heroComics) use ($featured, $recent, $future) {
+                return $heroComics->first()->is($featured)
+                    && $heroComics->contains($recent)
+                    && ! $heroComics->contains($future);
+            });
     }
 
     public function test_unpublished_comic_detail_returns_404(): void
@@ -52,6 +151,22 @@ class ComicReaderTest extends TestCase
             ->assertOk()
             ->assertSee(asset('images/media-placeholder.svg'), false)
             ->assertDontSee('https://placehold.co');
+    }
+
+    public function test_uploaded_cover_uses_a_host_independent_storage_url(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('comics/covers/test-cover.jpg', 'cover');
+
+        $comic = Comic::factory()->create([
+            'published_at' => now(),
+            'cover_image' => 'comics/covers/test-cover.jpg',
+        ]);
+
+        $this->get(route('comic.detail', $comic))
+            ->assertOk()
+            ->assertSee('src="/storage/comics/covers/test-cover.jpg"', false)
+            ->assertDontSee(config('app.url').'/storage/comics/covers/test-cover.jpg', false);
     }
 
     public function test_comic_detail_displays_chapters(): void
@@ -83,7 +198,7 @@ class ComicReaderTest extends TestCase
         $response = $this->get(route('comic.detail', $comic));
 
         $response->assertStatus(200);
-        
+
         // The view receives chapters loaded by the controller which only loads published ones
         $viewComic = $response->viewData('comic');
         $publishedCount = $viewComic->chapters->count();
@@ -102,7 +217,7 @@ class ComicReaderTest extends TestCase
         $response = $this->get(route('chapter.reader', ['comic' => $comic, 'chapter' => $chapter]));
 
         $response->assertStatus(200);
-        $response->assertSee($chapter->title ?: 'Chapter ' . $chapter->chapter_number);
+        $response->assertSee($chapter->title ?: 'Chapter '.$chapter->chapter_number);
         $response->assertViewHas('chapter', $chapter);
     }
 
@@ -157,7 +272,7 @@ class ComicReaderTest extends TestCase
             Page::create([
                 'chapter_id' => $chapter->id,
                 'page_number' => $i,
-                'image_path' => "pages/test-comic/chapter-{$chapter->chapter_number}/page-" . str_pad((string) $i, 3, '0', STR_PAD_LEFT) . '.jpg',
+                'image_path' => "pages/test-comic/chapter-{$chapter->chapter_number}/page-".str_pad((string) $i, 3, '0', STR_PAD_LEFT).'.jpg',
             ]);
         }
 
@@ -350,6 +465,51 @@ class ComicReaderTest extends TestCase
         $response->assertSee(route('comic.detail', $comic));
     }
 
+    public function test_empty_search_displays_top_rated_published_comics(): void
+    {
+        $topComic = Comic::factory()->create([
+            'title' => 'Top Rated Search Comic',
+            'published_at' => now()->subMonth(),
+        ]);
+        $lowerComic = Comic::factory()->create([
+            'title' => 'Lower Rated Search Comic',
+            'published_at' => now(),
+        ]);
+        $futureComic = Comic::factory()->create([
+            'title' => 'Future Rated Search Comic',
+            'published_at' => now()->addDay(),
+        ]);
+
+        Rating::create([
+            'user_id' => User::factory()->create()->id,
+            'comic_id' => $topComic->id,
+            'score' => 5,
+        ]);
+        Rating::create([
+            'user_id' => User::factory()->create()->id,
+            'comic_id' => $lowerComic->id,
+            'score' => 3,
+        ]);
+        Rating::create([
+            'user_id' => User::factory()->create()->id,
+            'comic_id' => $futureComic->id,
+            'score' => 5,
+        ]);
+
+        $response = $this->get(route('search'));
+
+        $response
+            ->assertOk()
+            ->assertSee('data-top-comics', false)
+            ->assertSee($topComic->title)
+            ->assertSee($lowerComic->title)
+            ->assertDontSee($futureComic->title)
+            ->assertViewHas('topComics', function ($topComics) use ($topComic, $futureComic) {
+                return $topComics->first()->is($topComic)
+                    && ! $topComics->contains($futureComic);
+            });
+    }
+
     public function test_public_search_rejects_oversized_queries(): void
     {
         $this->get(route('search', ['q' => str_repeat('x', 256)]))
@@ -367,10 +527,52 @@ class ComicReaderTest extends TestCase
             'published_at' => now(),
         ]);
 
-        $response = $this->get(route('home'));
+        $response = $this->actingAs(User::factory()->create())->get(route('home'));
 
         $response->assertStatus(200);
         $response->assertSee(route('chapter.reader', ['comic' => $comic, 'chapter' => $chapter]));
+    }
+
+    public function test_guest_homepage_hides_reader_specific_chapter_section(): void
+    {
+        $comic = Comic::factory()->create(['published_at' => now()]);
+        $chapter = Chapter::factory()->create([
+            'comic_id' => $comic->id,
+            'is_published' => true,
+            'published_at' => now(),
+        ]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertDontSee(route('chapter.reader', ['comic' => $comic, 'chapter' => $chapter]));
+    }
+
+    public function test_authenticated_homepage_continues_last_read_page(): void
+    {
+        $user = User::factory()->create();
+        $comic = Comic::factory()->create(['published_at' => now()]);
+        $chapter = Chapter::factory()->create([
+            'comic_id' => $comic->id,
+            'chapter_number' => 4,
+            'is_published' => true,
+            'published_at' => now(),
+        ]);
+        ReadingHistory::create([
+            'user_id' => $user->id,
+            'comic_id' => $comic->id,
+            'chapter_id' => $chapter->id,
+            'page_number' => 7,
+            'last_read_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('Continue reading')
+            ->assertSee(route('chapter.reader', ['comic' => $comic, 'chapter' => $chapter]).'?page=7', false)
+            ->assertViewHas('continueReading', function ($continueReading) use ($comic) {
+                return $continueReading->first()->comic->is($comic);
+            });
     }
 
     public function test_public_discovery_excludes_future_dated_comics(): void

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Reading History | Comic Project')
+@section('title', 'Reading History | zYx comic')
 
 @section('content')
     <section class="page-header">
@@ -60,71 +60,4 @@
         </div>
     </section>
 
-    <style>
-        .reading-history-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .history-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem;
-            background: #f8f8f8;
-            border-radius: 0.5rem;
-            border-left: 4px solid #4a90e2;
-        }
-
-        .history-item-content {
-            flex: 1;
-        }
-
-        .history-item-content h3 {
-            margin: 0 0 0.5rem 0;
-        }
-
-        .history-item-content h3 a {
-            color: #333;
-            text-decoration: none;
-        }
-
-        .history-item-content h3 a:hover {
-            color: #4a90e2;
-        }
-
-        .history-meta {
-            margin: 0.25rem 0;
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .history-time {
-            margin: 0.5rem 0 0 0;
-            color: #999;
-            font-size: 0.85rem;
-        }
-
-        .history-item-actions {
-            margin-left: 1rem;
-        }
-
-        @media (max-width: 640px) {
-            .history-item {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .history-item-actions {
-                margin-left: 0;
-                margin-top: 1rem;
-                width: 100%;
-            }
-
-            .history-item-actions .btn {
-                width: 100%;
-            }
-        }
-    </style>
 @endsection

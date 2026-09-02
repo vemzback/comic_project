@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
@@ -36,7 +37,7 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->intended('/');
+        return redirect()->route('verification.notice');
     }
 
     public function showLoginForm(): View
@@ -44,14 +45,14 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    public function login(Request $request): RedirectResponse|\Illuminate\Http\Response
+    public function login(Request $request): RedirectResponse|Response
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
 
-        $throttleKey = strtolower(trim($credentials['email'])) . '|' . $request->ip();
+        $throttleKey = strtolower(trim($credentials['email'])).'|'.$request->ip();
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             return response('Too many login attempts.', 429);
@@ -62,6 +63,10 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             $user = Auth::user();
+
+            if ($user && ! $user->hasVerifiedEmail()) {
+                return redirect()->route('verification.notice');
+            }
 
             return redirect()->intended($user && $user->role === 'admin' ? '/admin/dashboard' : '/');
         }

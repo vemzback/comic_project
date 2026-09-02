@@ -109,6 +109,7 @@ class AdminMediaManagementTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
         $comic = Comic::factory()->create([
             'cover_image' => 'comics/covers/delete-me.jpg',
+            'published_at' => null,
         ]);
         Storage::disk('public')->put($comic->cover_image, 'delete me');
 
@@ -125,6 +126,7 @@ class AdminMediaManagementTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
         $comic = Comic::factory()->create([
             'cover_image' => 'comics/covers/delete-comic.jpg',
+            'published_at' => null,
         ]);
         $otherComic = Comic::factory()->create([
             'cover_image' => 'comics/covers/keep-comic.jpg',
@@ -172,6 +174,7 @@ class AdminMediaManagementTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
         $comic = Comic::factory()->create([
             'cover_image' => 'comics/covers/already-missing.jpg',
+            'published_at' => null,
         ]);
         $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
         $page = Page::factory()->create([
@@ -190,8 +193,8 @@ class AdminMediaManagementTest extends TestCase
 
     public function test_guest_cannot_upload_page_image(): void
     {
-        $comic = Comic::factory()->create();
-        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $comic = Comic::factory()->create(['published_at' => null]);
+        $chapter = Chapter::factory()->create(['comic_id' => $comic->id, 'is_published' => false]);
 
         $this->post("/admin/comics/{$comic->id}/chapters/{$chapter->id}/pages", [
             'page_number' => 1,
@@ -218,6 +221,7 @@ class AdminMediaManagementTest extends TestCase
         $chapter = Chapter::factory()->create([
             'comic_id' => $comic->id,
             'chapter_number' => 1,
+            'is_published' => false,
         ]);
 
         $response = $this->actingAs($admin)->post("/admin/comics/{$comic->id}/chapters/{$chapter->id}/pages", [
@@ -251,8 +255,8 @@ class AdminMediaManagementTest extends TestCase
     public function test_admin_can_replace_page_image_and_remove_old_file(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $comic = Comic::factory()->create();
-        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $comic = Comic::factory()->create(['published_at' => null]);
+        $chapter = Chapter::factory()->create(['comic_id' => $comic->id, 'is_published' => false]);
         $page = Page::factory()->create([
             'chapter_id' => $chapter->id,
             'page_number' => 1,
@@ -278,8 +282,8 @@ class AdminMediaManagementTest extends TestCase
     public function test_deleting_page_removes_its_image_and_deleting_chapter_removes_related_page_media(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $comic = Comic::factory()->create();
-        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $comic = Comic::factory()->create(['published_at' => null]);
+        $chapter = Chapter::factory()->create(['comic_id' => $comic->id, 'is_published' => false]);
         $page = Page::factory()->create([
             'chapter_id' => $chapter->id,
             'page_number' => 1,
@@ -297,6 +301,7 @@ class AdminMediaManagementTest extends TestCase
         $secondChapter = Chapter::factory()->create([
             'comic_id' => $comic->id,
             'chapter_number' => 2,
+            'is_published' => false,
         ]);
         $secondPage = Page::factory()->create([
             'chapter_id' => $secondChapter->id,
@@ -339,7 +344,7 @@ class AdminMediaManagementTest extends TestCase
 
         $this->get(route('chapter.reader', ['comic' => $comic, 'chapter' => $publishedChapter]))
             ->assertOk()
-            ->assertSee('storage/' . $page->image_path);
+            ->assertSee('storage/'.$page->image_path);
 
         $this->get(route('chapter.reader', ['comic' => $comic, 'chapter' => $draftChapter]))
             ->assertNotFound();

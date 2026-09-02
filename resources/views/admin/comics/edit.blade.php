@@ -23,6 +23,8 @@
             </div>
         @endif
 
+        @include('admin.comics._readiness')
+
         <form method="POST" action="{{ route('admin.comics.update', $comic) }}" enctype="multipart/form-data" class="admin-card admin-form">
             @csrf
             @method('PUT')
@@ -47,6 +49,24 @@
                         <textarea id="description" name="description" class="form-control">{{ old('description', $comic->description) }}</textarea>
                         @error('description') <span class="form-error" role="alert">{{ $message }}</span> @enderror
                     </div>
+
+                    <div class="admin-field">
+                        <label for="author" class="form-label">Author / Creator</label>
+                        <input id="author" type="text" name="author" value="{{ old('author', $comic->author) }}" class="form-control">
+                        @error('author') <span class="form-error" role="alert">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="admin-field">
+                        <label for="publisher" class="form-label">Publisher</label>
+                        <input id="publisher" type="text" name="publisher" value="{{ old('publisher', $comic->publisher) }}" class="form-control">
+                        @error('publisher') <span class="form-error" role="alert">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="admin-field">
+                        <label for="original_published_at" class="form-label">Original Publication Date</label>
+                        <input id="original_published_at" type="date" name="original_published_at" value="{{ old('original_published_at', $comic->original_published_at?->format('Y-m-d')) }}" class="form-control">
+                        @error('original_published_at') <span class="form-error" role="alert">{{ $message }}</span> @enderror
+                    </div>
                 </div>
             </fieldset>
 
@@ -66,6 +86,11 @@
                     <div class="admin-field">
                         <label for="published_at" class="form-label">Published At</label>
                         <input id="published_at" type="date" name="published_at" value="{{ old('published_at', $comic->published_at?->format('Y-m-d')) }}" class="form-control">
+                        <small class="admin-field-help">
+                            {{ $publicationReadiness['ready']
+                                ? 'All required checks pass. Add a date to publish or schedule this comic.'
+                                : 'Publishing is locked until the blocking issues above are completed.' }}
+                        </small>
                         @error('published_at') <span class="form-error" role="alert">{{ $message }}</span> @enderror
                     </div>
 

@@ -12,6 +12,9 @@
             </div>
             <div class="admin-toolbar">
                 <a href="{{ route('admin.comics.chapters.index', $comic) }}" class="btn btn-secondary">Back to Chapter Management</a>
+                @if ($pages->total() === 0)
+                    <a href="{{ route('admin.comics.chapters.pages.bulk.create', [$comic, $chapter]) }}" class="btn btn-primary">Bulk Import Pages</a>
+                @endif
                 <a href="{{ route('admin.comics.chapters.pages.create', [$comic, $chapter]) }}" class="btn btn-primary">Create Page</a>
             </div>
         </div>
@@ -20,11 +23,24 @@
             <div class="form-success" role="status">{{ session('success') }}</div>
         @endif
 
+        @if ($errors->any())
+            <div class="form-error-box" role="alert">
+                <ul class="form-error-list">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         @if ($pages->isEmpty())
             <section class="admin-card admin-empty-state">
                 <h2>No pages found</h2>
-                <p>Add the first page to begin building this chapter.</p>
-                <a href="{{ route('admin.comics.chapters.pages.create', [$comic, $chapter]) }}" class="btn btn-primary">Create Page</a>
+                <p>Upload one ZIP or CBZ archive to add every page at once, or create a page manually.</p>
+                <div class="admin-empty-actions">
+                    <a href="{{ route('admin.comics.chapters.pages.bulk.create', [$comic, $chapter]) }}" class="btn btn-primary">Bulk Import Pages</a>
+                    <a href="{{ route('admin.comics.chapters.pages.create', [$comic, $chapter]) }}" class="btn btn-secondary">Create One Page</a>
+                </div>
             </section>
         @else
             <section class="admin-card admin-table-card" aria-labelledby="page-catalog-heading">
@@ -52,11 +68,13 @@
                                         <div class="admin-actions">
                                             <a href="{{ route('admin.comics.chapters.pages.show', [$comic, $chapter, $page]) }}" class="btn btn-secondary">View</a>
                                             <a href="{{ route('admin.comics.chapters.pages.edit', [$comic, $chapter, $page]) }}" class="btn btn-secondary">Edit</a>
-                                            <form method="POST" action="{{ route('admin.comics.chapters.pages.destroy', [$comic, $chapter, $page]) }}" class="inline-form">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this page?')">Delete</button>
-                                            </form>
+                                            @if (! $comic->published_at || ! $chapter->is_published)
+                                                <form method="POST" action="{{ route('admin.comics.chapters.pages.destroy', [$comic, $chapter, $page]) }}" class="inline-form">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this page?')">Delete</button>
+                                                </form>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>

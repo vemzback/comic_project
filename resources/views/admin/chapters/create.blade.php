@@ -64,12 +64,10 @@
                         @error('sort_order') <span class="form-error" role="alert">{{ $message }}</span> @enderror
                     </div>
 
-                    <div class="admin-field admin-checkbox-field">
-                        <label class="admin-checkbox-label">
-                            <input id="is_published" type="checkbox" name="is_published" value="1" {{ old('is_published') ? 'checked' : '' }}>
-                            <span>Published chapter</span>
-                        </label>
-                        @error('is_published') <span class="form-error" role="alert">{{ $message }}</span> @enderror
+                    <div class="admin-field admin-publishing-note">
+                        <span class="form-label">Initial visibility</span>
+                        <strong>Draft</strong>
+                        <p>Upload the chapter pages first. You can publish it safely from the Edit page afterward.</p>
                     </div>
                 </div>
             </fieldset>

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Change Password | Comic Project')
+@section('title', 'Change Password | zYx comic')
 
 @section('content')
     <div class="account-shell">

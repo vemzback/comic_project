@@ -13,6 +13,7 @@ class RatingTest extends TestCase
     use RefreshDatabase;
 
     private Comic $comic;
+
     private User $user;
 
     protected function setUp(): void
@@ -45,8 +46,8 @@ class RatingTest extends TestCase
             ->get(route('comic.detail', $this->comic));
 
         $response->assertOk();
-        $response->assertSee('rating');
-        $response->assertSee('Rate');
+        $response->assertSee('star-rating');
+        $response->assertSee('Save Rating');
     }
 
     public function test_authenticated_user_can_create_a_rating(): void
@@ -124,5 +125,87 @@ class RatingTest extends TestCase
             'comic_id' => $this->comic->id,
             'score' => 5,
         ]);
+    }
+
+    public function test_ajax_rating_returns_updated_average_and_count(): void
+    {
+        $otherUser = User::factory()->create(['role' => 'user']);
+
+        Rating::create([
+            'user_id' => $otherUser->id,
+            'comic_id' => $this->comic->id,
+            'score' => 3,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->postJson(route('ratings.store', $this->comic), [
+                'score' => 5,
+            ]);
+
+        $response->assertOk()
+            ->assertJson([
+                'message' => 'Your rating has been saved.',
+                'average_rating' => 4,
+                'rating_count' => 2,
+                'user_score' => 5,
+            ]);
+    }
+
+    public function test_rating_is_rejected_for_unpublished_or_future_comic(): void
+    {
+        $unpublishedComic = Comic::factory()->create([
+            'status' => 'ongoing',
+            'published_at' => null,
+        ]);
+        $futureComic = Comic::factory()->create([
+            'status' => 'ongoing',
+            'published_at' => now()->addDay(),
+        ]);
+
+        $this->actingAs($this->user)
+            ->post(route('ratings.store', $unpublishedComic), ['score' => 5])
+            ->assertNotFound();
+
+        $this->actingAs($this->user)
+            ->post(route('ratings.store', $futureComic), ['score' => 5])
+            ->assertNotFound();
+
+        $this->assertDatabaseMissing('ratings', ['user_id' => $this->user->id]);
+    }
+
+    public function test_comic_detail_displays_calculated_average(): void
+    {
+        $otherUser = User::factory()->create(['role' => 'user']);
+
+        Rating::create([
+            'user_id' => $this->user->id,
+            'comic_id' => $this->comic->id,
+            'score' => 3,
+        ]);
+        Rating::create([
+            'user_id' => $otherUser->id,
+            'comic_id' => $this->comic->id,
+            'score' => 5,
+        ]);
+
+        $this->get(route('comic.detail', $this->comic))
+            ->assertOk()
+            ->assertSee('4.0')
+            ->assertSee('2')
+            ->assertSee('ratings');
+    }
+
+    public function test_catalog_card_displays_rating_summary(): void
+    {
+        Rating::create([
+            'user_id' => $this->user->id,
+            'comic_id' => $this->comic->id,
+            'score' => 4,
+        ]);
+
+        $this->get(route('comics'))
+            ->assertOk()
+            ->assertSee('4.0')
+            ->assertSee('(1)');
     }
 }
