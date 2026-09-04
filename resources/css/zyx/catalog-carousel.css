@@ -1,0 +1,411 @@
+/* Hybrid catalog carousel */
+.public-shell .catalog-showcase {
+    padding: 2.25rem 0 2rem;
+    overflow: hidden;
+    border-bottom: 1px solid #343434;
+    background:
+        radial-gradient(circle at 72% 30%, rgba(255, 75, 43, 0.11), transparent 30rem),
+        #0a0a0a;
+}
+
+.public-shell .catalog-showcase-topline {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #343434;
+}
+
+.public-shell .catalog-showcase-topline .eyebrow {
+    margin-bottom: 0.25rem;
+}
+
+.public-shell .catalog-showcase-topline span,
+.public-shell .catalog-showcase-topline > p {
+    color: #8d8a84;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.public-shell .catalog-showcase-topline > p {
+    margin: 0;
+    text-align: right;
+}
+
+.public-shell .catalog-slider-viewport {
+    position: relative;
+    margin-top: 1.5rem;
+    overflow: hidden;
+    border: 1px solid #373737;
+    border-radius: 20px;
+    background: #111;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+}
+
+.public-shell .catalog-slider-track {
+    display: grid;
+}
+
+.public-shell .catalog-slide {
+    position: relative;
+    display: grid;
+    z-index: 0;
+    grid-area: 1 / 1;
+    grid-template-columns: minmax(0, 1fr) minmax(210px, 310px);
+    gap: clamp(2rem, 6vw, 5rem);
+    align-items: center;
+    min-height: 490px;
+    padding: clamp(2rem, 5vw, 4.5rem) clamp(3.75rem, 7vw, 6rem);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(30px);
+    visibility: hidden;
+    transition: opacity 0.45s ease, transform 0.45s ease, visibility 0.45s;
+}
+
+.public-shell .catalog-slide[data-active] {
+    z-index: 1;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+    visibility: visible;
+}
+
+.public-shell .catalog-slide::before {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background:
+        linear-gradient(115deg, rgba(255, 75, 43, 0.08), transparent 40%),
+        repeating-linear-gradient(90deg, transparent 0 119px, rgba(255, 255, 255, 0.025) 120px);
+    content: "";
+}
+
+.public-shell .catalog-slide-copy {
+    min-width: 0;
+}
+
+.public-shell .catalog-slide-index {
+    margin: 0 0 1.35rem;
+    color: #77746e;
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.12em;
+}
+
+.public-shell .catalog-slide-copy > .eyebrow {
+    margin-bottom: 0.55rem;
+}
+
+.public-shell .catalog-slide h1 {
+    max-width: 720px;
+    margin: 0;
+    color: #f5f2e9;
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+    font-size: clamp(2.75rem, 6vw, 5.4rem);
+    font-weight: 400;
+    letter-spacing: -0.035em;
+    line-height: 0.92;
+    overflow-wrap: anywhere;
+    text-transform: uppercase;
+    text-wrap: balance;
+}
+
+.public-shell .catalog-slide-meta {
+    display: flex;
+    gap: 0.65rem 1rem;
+    margin-top: 1rem;
+    color: #aaa69e;
+    font-size: 0.66rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    flex-wrap: wrap;
+    text-transform: uppercase;
+}
+
+.public-shell .catalog-slide-meta b {
+    color: #f5c542;
+}
+
+.public-shell .catalog-slide-description {
+    display: -webkit-box;
+    max-width: 650px;
+    margin: 1.35rem 0 0;
+    overflow: hidden;
+    color: #b8b4aa;
+    line-height: 1.65;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+}
+
+.public-shell .catalog-slide-genres {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.public-shell .catalog-slide-genres span {
+    padding: 0.25rem 0.55rem;
+    border: 1px solid #3d3d3d;
+    border-radius: 999px;
+    color: #aaa69e;
+    font-size: 0.56rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.public-shell .catalog-slide-copy > .btn {
+    margin-top: 1.4rem;
+}
+
+.public-shell .catalog-slide-art {
+    position: relative;
+    display: block;
+    width: min(100%, 270px);
+    justify-self: center;
+}
+
+.public-shell .catalog-slide-art-back {
+    position: absolute;
+    inset: 18px -18px -18px 18px;
+    border: 1px solid rgba(255, 75, 43, 0.45);
+    border-radius: 15px;
+    background: rgba(255, 75, 43, 0.16);
+    transform: rotate(3deg);
+    transition: transform 0.3s ease;
+}
+
+.public-shell .catalog-slide-art img {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    border: 1px solid #484848;
+    border-radius: 14px;
+    object-fit: cover;
+    box-shadow: 0 25px 55px rgba(0, 0, 0, 0.42);
+    transition: transform 0.3s ease;
+}
+
+.public-shell .catalog-slide-art:hover img,
+.public-shell .catalog-slide-art:focus-visible img {
+    transform: translateY(-6px) rotate(-1deg);
+}
+
+.public-shell .catalog-slide-art:hover .catalog-slide-art-back,
+.public-shell .catalog-slide-art:focus-visible .catalog-slide-art-back {
+    transform: rotate(5deg) translateY(3px);
+}
+
+.public-shell .catalog-slider-arrow {
+    position: absolute;
+    z-index: 3;
+    top: 50%;
+    display: grid;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    place-items: center;
+    border: 1px solid #464646;
+    border-radius: 50%;
+    background: rgba(10, 10, 10, 0.84);
+    color: #f5f2e9;
+    cursor: pointer;
+    font-size: 1rem;
+    transform: translateY(-50%);
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.public-shell .catalog-slider-prev {
+    left: 1rem;
+}
+
+.public-shell .catalog-slider-next {
+    right: 1rem;
+}
+
+.public-shell .catalog-slider-arrow:hover,
+.public-shell .catalog-slider-arrow:focus-visible {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: #0a0a0a;
+    outline: none;
+}
+
+.public-shell .catalog-slider-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 1rem;
+}
+
+.public-shell .catalog-slider-dots {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.public-shell .catalog-slider-dots button {
+    width: 26px;
+    height: 4px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: #3b3b3b;
+    cursor: pointer;
+    transition: width 0.25s ease, background 0.25s ease;
+}
+
+.public-shell .catalog-slider-dots button[data-active] {
+    width: 48px;
+    background: var(--primary);
+}
+
+.public-shell .catalog-slider-dots button:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+}
+
+.public-shell .catalog-slider-controls > p {
+    margin: 0;
+    color: #817e78;
+    font-size: 0.64rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+}
+
+.public-shell .catalog-slider-controls [data-catalog-current] {
+    color: #f5f2e9;
+}
+
+.public-shell .catalog-library-section {
+    padding-top: 3.75rem;
+}
+
+.public-shell .catalog-library-heading > span {
+    color: #8d8a84;
+    font-size: 0.65rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.public-shell .catalog-showcase-empty {
+    padding: 4rem 0;
+}
+
+.public-shell .catalog-showcase-empty h1 {
+    margin: 0;
+    color: #f5f2e9;
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+    font-size: clamp(2.5rem, 7vw, 5rem);
+    font-weight: 400;
+    text-transform: uppercase;
+}
+
+@media (max-width: 860px) {
+    .public-shell .catalog-slide {
+        grid-template-columns: minmax(0, 1fr) minmax(180px, 230px);
+        gap: 2.5rem;
+        min-height: 440px;
+        padding: 2.5rem 4rem;
+    }
+
+    .public-shell .catalog-slide h1 {
+        font-size: clamp(2.5rem, 7vw, 4rem);
+    }
+}
+
+@media (max-width: 680px) {
+    .public-shell .catalog-showcase {
+        padding-top: 1.5rem;
+    }
+
+    .public-shell .catalog-showcase-topline > p {
+        display: none;
+    }
+
+    .public-shell .catalog-slider-viewport {
+        border-radius: 16px;
+    }
+
+    .public-shell .catalog-slide {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        align-content: start;
+        min-height: 0;
+        padding: 1.5rem 1.25rem 2rem;
+    }
+
+    .public-shell .catalog-slide-art {
+        order: -1;
+        width: min(62vw, 210px);
+    }
+
+    .public-shell .catalog-slide-art-back {
+        inset: 12px -12px -12px 12px;
+    }
+
+    .public-shell .catalog-slide-index {
+        margin-bottom: 0.75rem;
+    }
+
+    .public-shell .catalog-slide h1 {
+        font-size: clamp(2.3rem, 12vw, 3.3rem);
+    }
+
+    .public-shell .catalog-slide-description {
+        margin-top: 1rem;
+        font-size: 0.88rem;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+    }
+
+    .public-shell .catalog-slider-arrow {
+        top: 175px;
+        width: 38px;
+        height: 38px;
+    }
+
+    .public-shell .catalog-slider-prev {
+        left: 0.75rem;
+    }
+
+    .public-shell .catalog-slider-next {
+        right: 0.75rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .public-shell .catalog-slider-dots button {
+        width: 18px;
+    }
+
+    .public-shell .catalog-slider-dots button[data-active] {
+        width: 34px;
+    }
+
+    .public-shell .catalog-slider-controls > p {
+        font-size: 0.58rem;
+    }
+
+    .public-shell .catalog-library-section {
+        padding-top: 3rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .public-shell .catalog-slide,
+    .public-shell .catalog-slide-art img,
+    .public-shell .catalog-slide-art-back,
+    .public-shell .catalog-slider-dots button {
+        transition: none;
+    }
+}

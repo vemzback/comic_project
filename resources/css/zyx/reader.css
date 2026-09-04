@@ -1,0 +1,260 @@
+/* Comic Detail & Reader Styles */
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    transition: 0.2s ease;
+}
+
+.back-link:hover {
+    opacity: 0.8;
+}
+
+.page-header {
+    background: linear-gradient(135deg, #f8fafc, #eef2ff);
+    margin: 2rem auto 2rem;
+    padding: 2rem 1.2rem;
+}
+
+.page-header h1 {
+    margin: 0.5rem 0;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+}
+
+.page-header .meta {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.comic-cover-large {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.chapters-section {
+    background: var(--surface);
+    padding: 1.5rem;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+}
+
+.chapters-section h2 {
+    margin: 0 0 1.5rem;
+    font-size: 1.5rem;
+}
+
+.chapter-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.chapter-item {
+    padding: 1rem 1.25rem;
+    background: var(--surface-alt);
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    transition: 0.2s ease;
+}
+
+.chapter-item:hover {
+    background: #e0e7ff;
+    transform: translateX(4px);
+}
+
+.chapter-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.chapter-number {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.chapter-title {
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.publish-date {
+    color: var(--muted-light);
+    font-size: 0.8rem;
+}
+
+.arrow {
+    color: var(--primary);
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+/* Reader Styles */
+
+.reader-header {
+    padding: 2.5rem 0 2rem;
+    background: #111827;
+    color: #fff;
+}
+
+.reader-header .container {
+    max-width: 960px;
+}
+
+.reader-header .eyebrow {
+    margin: 1.5rem 0 0.5rem;
+    color: #93c5fd;
+}
+
+.reader-header h1 {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1.1;
+}
+
+.reader-back-link {
+    color: #dbeafe;
+    font-weight: 700;
+}
+
+.reader-context {
+    margin: 0.75rem 0 0;
+    color: #d1d5db;
+}
+
+.reader-content {
+    background: #1f2937;
+}
+
+.reader-section {
+    max-width: 960px;
+    padding: 1.5rem 0 3rem;
+}
+
+.reader-empty {
+    background: var(--surface);
+    padding: 3rem;
+    border-radius: 18px;
+    text-align: center;
+    border: 1px solid var(--border);
+}
+
+.reader-pages {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.reader-page {
+    background: #111827;
+    padding: 0.75rem;
+    border-radius: 4px;
+}
+
+.page-figure {
+    margin: 0;
+    padding: 0;
+}
+
+.page-image {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.page-unavailable {
+    margin: 0.75rem 0 0;
+    color: #d1d5db;
+    text-align: center;
+    font-size: 0.85rem;
+}
+
+.page-figure figcaption {
+    margin-top: 0.75rem;
+    text-align: center;
+    color: #d1d5db;
+    font-size: 0.85rem;
+}
+
+.reader-navigation-section {
+    background: #f3f4f6;
+    padding: 2rem 0 3rem;
+}
+
+.reader-navigation-top {
+    padding: 0;
+}
+
+.reader-navigation {
+    display: grid;
+    grid-template-columns: 1fr 200px 1fr;
+    gap: 1rem;
+    align-items: center;
+}
+
+.nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    text-align: center;
+    transition: 0.2s ease;
+}
+
+.nav-btn:hover:not(.disabled) {
+    background: #f0f4ff;
+    transform: translateX(-4px);
+}
+
+.nav-btn.next-btn:hover:not(.disabled) {
+    transform: translateX(4px);
+}
+
+.nav-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    color: var(--muted);
+}
+
+.nav-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--muted-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.nav-title {
+    display: block;
+    font-weight: 700;
+    color: var(--text);
+    font-size: 1rem;
+}
+
+.nav-arrow {
+    font-size: 1.5rem;
+    color: var(--primary);
+}
+
+.back-to-comic {
+    justify-self: center;
+}
+
