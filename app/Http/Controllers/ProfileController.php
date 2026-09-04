@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Comic;
+use App\Support\PhoneNumber;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -38,9 +39,15 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
+        $request->merge([
+            'email' => strtolower(trim((string) $request->input('email'))),
+            'phone' => PhoneNumber::normalize($request->input('phone')),
+        ]);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'phone' => ['nullable', 'string', 'regex:/^\+[1-9][0-9]{7,14}$/', 'unique:users,phone,'.$user->id],
         ]);
 
         $emailChanged = $validated['email'] !== $user->email;
@@ -48,6 +55,7 @@ class ProfileController extends Controller
         $user->forceFill([
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'phone' => $validated['phone'],
             'email_verified_at' => $emailChanged ? null : $user->email_verified_at,
         ]);
 

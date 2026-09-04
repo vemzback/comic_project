@@ -14,6 +14,7 @@ use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\ComicDetailController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\EmailVerificationController;
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PasswordResetController;
@@ -38,6 +39,10 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])
+        ->middleware('throttle:10,1')
+        ->name('auth.google.callback');
 
     Route::get('/forgot-password', [PasswordResetController::class, 'create'])->name('password.request');
     Route::post('/forgot-password', [PasswordResetController::class, 'store'])

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\PhoneNumber;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -10,6 +11,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AuthController extends Controller
@@ -21,9 +23,15 @@ class AuthController extends Controller
 
     public function register(Request $request): RedirectResponse
     {
+        $request->merge([
+            'email' => strtolower(trim((string) $request->input('email'))),
+            'phone' => PhoneNumber::normalize($request->input('phone')),
+        ]);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'phone' => ['nullable', 'string', 'regex:/^\+[1-9][0-9]{7,14}$/', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
@@ -47,18 +55,40 @@ class AuthController extends Controller
 
     public function login(Request $request): RedirectResponse|Response
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
+        $usesLegacyEmailField = ! $request->has('login') && $request->has('email');
+        $login = trim((string) $request->input('login', $request->input('email')));
+
+        $request->merge(['login' => $login]);
+
+        $validated = $request->validate([
+            'login' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ]);
 
-        $throttleKey = strtolower(trim($credentials['email'])).'|'.$request->ip();
+        if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
+            $field = 'email';
+            $identifier = strtolower($login);
+        } else {
+            $field = 'phone';
+            $identifier = PhoneNumber::normalize($login);
+
+            if (! PhoneNumber::isValid($identifier)) {
+                throw ValidationException::withMessages([
+                    $usesLegacyEmailField ? 'email' : 'login' => 'Enter a valid email address or phone number.',
+                ]);
+            }
+        }
+
+        $throttleKey = strtolower($identifier).'|'.$request->ip();
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             return response('Too many login attempts.', 429);
         }
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (Auth::attempt([
+            $field => $identifier,
+            'password' => $validated['password'],
+        ], $request->boolean('remember'))) {
             RateLimiter::clear($throttleKey);
             $request->session()->regenerate();
 
@@ -74,8 +104,8 @@ class AuthController extends Controller
         RateLimiter::hit($throttleKey, 60);
 
         return back()->withErrors([
-            'email' => 'These credentials do not match our records.',
-        ])->onlyInput('email');
+            $usesLegacyEmailField ? 'email' : 'login' => 'These credentials do not match our records.',
+        ])->onlyInput($usesLegacyEmailField ? 'email' : 'login');
     }
 
     public function logout(Request $request): RedirectResponse

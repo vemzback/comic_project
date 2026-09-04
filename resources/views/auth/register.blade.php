@@ -41,6 +41,15 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="phone" class="form-label">Phone number <span class="form-label-optional">(optional)</span></label>
+                    <input id="phone" type="tel" name="phone" value="{{ old('phone') }}" class="form-control" autocomplete="tel" inputmode="tel" placeholder="0812 3456 7890">
+                    <small class="form-help">Add a number if you also want to sign in using your phone.</small>
+                    @error('phone')
+                        <span class="form-error" role="alert">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <div class="form-group">
                     <label for="password" class="form-label">Password</label>
                     <input id="password" type="password" name="password" class="form-control" autocomplete="new-password" required>
                     @error('password')

@@ -21,6 +21,9 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $fillable = [
         'name',
         'email',
+        'phone',
+        'google_id',
+        'email_verified_at',
         'avatar_path',
         'role',
         'password',
@@ -54,6 +57,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password',
         'remember_token',
+        'google_id',
     ];
 
     /**

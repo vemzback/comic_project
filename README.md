@@ -54,6 +54,22 @@ management.
 For local Vite development, use `npm run dev`. The optional demo seeder is
 intended for non-production environments only.
 
+## Google Login Setup
+
+Create an OAuth 2.0 web client in Google Cloud Console, then configure these
+values in `.env`:
+
+```text
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+GOOGLE_REDIRECT_URI="${APP_URL}/auth/google/callback"
+```
+
+Add the fully resolved callback URL (for example,
+`https://your-domain.example/auth/google/callback`) to the Google OAuth
+client's authorized redirect URIs. Email and phone/password login remain
+available when Google OAuth is not configured.
+
 ## Initial Administrator Setup
 
 Create a normal account through registration, then assign the `admin` role

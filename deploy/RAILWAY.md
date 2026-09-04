@@ -69,12 +69,19 @@ LOG_LEVEL=warning
 ANILIST_API_URL=https://graphql.anilist.co
 GOOGLE_BOOKS_API_URL=https://www.googleapis.com/books/v1/volumes
 GOOGLE_BOOKS_API_KEY=replace_in_railway_only
+GOOGLE_CLIENT_ID=replace_in_railway_only
+GOOGLE_CLIENT_SECRET=replace_in_railway_only
+GOOGLE_REDIRECT_URI=https://your-generated-domain.up.railway.app/auth/google/callback
 
 MAIL_MAILER=log
 ```
 
 If Railway names the database service something other than `MySQL`, update the
 service name in the `DB_URL` reference.
+
+Register the exact `GOOGLE_REDIRECT_URI` value as an authorized redirect URI in
+Google Cloud Console. Google login remains unavailable until all three Google
+OAuth variables are configured.
 
 ## Email limitation on Trial and Hobby
 
