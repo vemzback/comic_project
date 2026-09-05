@@ -29,4 +29,15 @@ class SecurityHeadersTest extends TestCase
         $this->get('/')
             ->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
     }
+
+    public function test_forwarded_https_is_used_for_asset_urls(): void
+    {
+        $response = $this
+            ->withServerVariables(['REMOTE_ADDR' => '10.0.0.2'])
+            ->withHeader('X-Forwarded-Proto', 'https')
+            ->get('/');
+
+        $response->assertOk();
+        $this->assertStringContainsString('https://localhost/build/', $response->getContent());
+    }
 }
