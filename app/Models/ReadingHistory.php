@@ -23,7 +23,15 @@ class ReadingHistory extends Model
     protected $casts = [
         'last_read_at' => 'datetime',
         'page_number' => 'integer',
+        'chapter_identity' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (ReadingHistory $history): void {
+            $history->chapter_identity = $history->chapter_id ?? 0;
+        });
+    }
 
     public function user(): BelongsTo
     {

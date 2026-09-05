@@ -35,8 +35,17 @@ return new class extends Migration
             });
 
         Schema::table('reading_history', function (Blueprint $table) {
-            $table->unsignedBigInteger('chapter_identity')
-                ->storedAs('COALESCE(chapter_id, 0)');
+            // Keep this as a regular column instead of a generated column.
+            // MySQL rejects generated columns whose source foreign key uses
+            // ON DELETE SET NULL, which is required by chapter_id.
+            $table->unsignedBigInteger('chapter_identity')->default(0);
+        });
+
+        DB::table('reading_history')
+            ->whereNotNull('chapter_id')
+            ->update(['chapter_identity' => DB::raw('chapter_id')]);
+
+        Schema::table('reading_history', function (Blueprint $table) {
             $table->unique(
                 ['user_id', 'comic_id', 'chapter_identity'],
                 'reading_history_identity_unique'
