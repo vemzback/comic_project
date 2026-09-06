@@ -57,7 +57,7 @@ class ProductionSafetyTest extends TestCase
     }
 
     /**
-     * @param class-string $seederClass
+     * @param  class-string  $seederClass
      */
     private function runSeederAndCaptureException(string $seederClass): ?Throwable
     {

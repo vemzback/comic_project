@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Bookmark;
 use App\Models\Comic;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;

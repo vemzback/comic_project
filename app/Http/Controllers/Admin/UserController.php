@@ -23,7 +23,7 @@ class UserController extends Controller
 
         // Validate and filter invalid role values
         $validRoles = ['user', 'admin'];
-        if ($role && !in_array($role, $validRoles)) {
+        if ($role && ! in_array($role, $validRoles)) {
             $role = '';
         }
 

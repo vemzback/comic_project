@@ -21,14 +21,14 @@ class UserBookmarkTest extends TestCase
     {
         $comic = Comic::factory()->create();
 
-        $this->post('/bookmarks/' . $comic->id)->assertRedirect('/login');
+        $this->post('/bookmarks/'.$comic->id)->assertRedirect('/login');
     }
 
     public function test_guest_cannot_delete_bookmark(): void
     {
         $comic = Comic::factory()->create();
 
-        $this->delete('/bookmarks/' . $comic->id)->assertRedirect('/login');
+        $this->delete('/bookmarks/'.$comic->id)->assertRedirect('/login');
     }
 
     public function test_authenticated_user_can_view_bookmark_list(): void
@@ -50,7 +50,7 @@ class UserBookmarkTest extends TestCase
         $comic = Comic::factory()->create();
 
         $this->actingAs($user)
-            ->post('/bookmarks/' . $comic->id)
+            ->post('/bookmarks/'.$comic->id)
             ->assertRedirect(route('comic.detail', $comic));
 
         $this->assertDatabaseHas('bookmarks', [
@@ -66,7 +66,7 @@ class UserBookmarkTest extends TestCase
         Bookmark::create(['user_id' => $user->id, 'comic_id' => $comic->id]);
 
         $this->actingAs($user)
-            ->delete('/bookmarks/' . $comic->id)
+            ->delete('/bookmarks/'.$comic->id)
             ->assertRedirect(route('bookmarks.index'));
 
         $this->assertDatabaseMissing('bookmarks', [
@@ -83,7 +83,7 @@ class UserBookmarkTest extends TestCase
 
         $this->actingAs($user)
             ->from(route('comic.detail', $comic))
-            ->post('/bookmarks/' . $comic->id)
+            ->post('/bookmarks/'.$comic->id)
             ->assertRedirect(route('comic.detail', $comic));
 
         $this->assertSame(1, Bookmark::where('user_id', $user->id)->where('comic_id', $comic->id)->count());
@@ -114,7 +114,7 @@ class UserBookmarkTest extends TestCase
         Bookmark::create(['user_id' => $userTwo->id, 'comic_id' => $comic->id]);
 
         $this->actingAs($userOne)
-            ->delete('/bookmarks/' . $comic->id)
+            ->delete('/bookmarks/'.$comic->id)
             ->assertNotFound();
     }
 

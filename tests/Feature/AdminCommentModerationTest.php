@@ -6,6 +6,7 @@ use App\Models\Comic;
 use App\Models\Comment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Routing\Router;
 use Tests\TestCase;
 
 class AdminCommentModerationTest extends TestCase
@@ -13,9 +14,13 @@ class AdminCommentModerationTest extends TestCase
     use RefreshDatabase;
 
     private Comic $comic;
+
     private Comic $otherComic;
+
     private User $admin;
+
     private User $user;
+
     private User $otherUser;
 
     protected function setUp(): void
@@ -381,7 +386,7 @@ class AdminCommentModerationTest extends TestCase
 
     public function test_admin_comment_mutation_returns_404_for_nonexistent_comment(): void
     {
-        $route = $this->app->make(\Illuminate\Routing\Router::class)
+        $route = $this->app->make(Router::class)
             ->getRoutes()
             ->getByName('admin.comments.approval.update');
 

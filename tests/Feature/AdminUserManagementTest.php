@@ -9,7 +9,9 @@ use App\Models\Comment;
 use App\Models\Rating;
 use App\Models\ReadingHistory;
 use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Routing\Router;
 use Tests\TestCase;
 
 class AdminUserManagementTest extends TestCase
@@ -172,13 +174,13 @@ class AdminUserManagementTest extends TestCase
 
         // Create some activity for this user using the project's fixture pattern
         // (direct model creation, not factories, following UserBookmarkTest, ReadingHistoryTest, etc.)
-        
+
         // Bookmarks: create 3 different comics and bookmark each one
         for ($i = 0; $i < 3; $i++) {
             $comic = Comic::factory()->create();
             Bookmark::create(['user_id' => $user->id, 'comic_id' => $comic->id]);
         }
-        
+
         // Reading history: one comic with five distinct chapter progress records
         $comic = Comic::factory()->create();
         for ($i = 0; $i < 5; $i++) {
@@ -193,18 +195,18 @@ class AdminUserManagementTest extends TestCase
                 'page_number' => ($i + 1),
             ]);
         }
-        
+
         // Comments: 2 different comics
         for ($i = 0; $i < 2; $i++) {
             $comic = Comic::factory()->create();
             Comment::create([
                 'user_id' => $user->id,
                 'comic_id' => $comic->id,
-                'body' => 'Test comment ' . ($i + 1),
+                'body' => 'Test comment '.($i + 1),
                 'is_approved' => true,
             ]);
         }
-        
+
         // Ratings: 4 different comics with different scores
         for ($i = 0; $i < 4; $i++) {
             $comic = Comic::factory()->create();
@@ -339,7 +341,7 @@ class AdminUserManagementTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
 
         $this->actingAs($admin)
-            ->get('/admin/users?search=' . str_repeat('x', 256))
+            ->get('/admin/users?search='.str_repeat('x', 256))
             ->assertSessionHasErrors(['search']);
     }
 
@@ -518,7 +520,7 @@ class AdminUserManagementTest extends TestCase
         for ($i = 0; $i < 15; $i++) {
             User::factory()->create([
                 'role' => 'user',
-                'name' => 'Alice User ' . $i,
+                'name' => 'Alice User '.$i,
             ]);
         }
 
@@ -769,12 +771,12 @@ class AdminUserManagementTest extends TestCase
 
     public function test_role_update_requires_csrf_protection(): void
     {
-        $route = $this->app->make(\Illuminate\Routing\Router::class)
+        $route = $this->app->make(Router::class)
             ->getRoutes()
             ->getByName('admin.users.role.update');
 
         $this->assertContains(
-            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+            ValidateCsrfToken::class,
             $route->gatherMiddleware(),
         );
     }

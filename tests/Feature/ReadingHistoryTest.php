@@ -7,8 +7,8 @@ use App\Models\Comic;
 use App\Models\Page;
 use App\Models\ReadingHistory;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Database\QueryException;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ReadingHistoryTest extends TestCase
@@ -16,8 +16,11 @@ class ReadingHistoryTest extends TestCase
     use RefreshDatabase;
 
     private Comic $comic;
+
     private Chapter $chapter;
+
     private User $user;
+
     private User $otherUser;
 
     protected function setUp(): void
@@ -29,7 +32,7 @@ class ReadingHistoryTest extends TestCase
             'status' => 'ongoing',
             'published_at' => now(),
         ]);
-        
+
         $this->chapter = Chapter::factory()->create([
             'comic_id' => $this->comic->id,
             'chapter_number' => 1,
@@ -65,7 +68,7 @@ class ReadingHistoryTest extends TestCase
     public function test_authenticated_user_can_record_reading_progress(): void
     {
         $this->actingAs($this->user)
-            ->get(route('chapter.reader', ['comic' => $this->comic, 'chapter' => $this->chapter]) . '?page=3');
+            ->get(route('chapter.reader', ['comic' => $this->comic, 'chapter' => $this->chapter]).'?page=3');
 
         $this->assertDatabaseHas('reading_history', [
             'user_id' => $this->user->id,
@@ -83,7 +86,7 @@ class ReadingHistoryTest extends TestCase
         $beforeRead = now()->subSecond();
 
         $this->actingAs($this->user)
-            ->get(route('chapter.reader', ['comic' => $this->comic, 'chapter' => $this->chapter]) . '?page=5');
+            ->get(route('chapter.reader', ['comic' => $this->comic, 'chapter' => $this->chapter]).'?page=5');
 
         $afterRead = now()->addSecond();
 
@@ -104,13 +107,13 @@ class ReadingHistoryTest extends TestCase
     {
         // First read at page 3
         $this->actingAs($this->user)
-            ->get(route('chapter.reader', ['comic' => $this->comic, 'chapter' => $this->chapter]) . '?page=3');
+            ->get(route('chapter.reader', ['comic' => $this->comic, 'chapter' => $this->chapter]).'?page=3');
 
         $this->assertDatabaseCount('reading_history', 1);
 
         // Second read at page 5
         $this->actingAs($this->user)
-            ->get(route('chapter.reader', ['comic' => $this->comic, 'chapter' => $this->chapter]) . '?page=5');
+            ->get(route('chapter.reader', ['comic' => $this->comic, 'chapter' => $this->chapter]).'?page=5');
 
         // Should still be 1 record
         $this->assertDatabaseCount('reading_history', 1);
@@ -220,7 +223,7 @@ class ReadingHistoryTest extends TestCase
     public function test_reading_history_belongs_to_authenticated_user(): void
     {
         $this->actingAs($this->user)
-            ->get(route('chapter.reader', ['comic' => $this->comic, 'chapter' => $this->chapter]) . '?page=2');
+            ->get(route('chapter.reader', ['comic' => $this->comic, 'chapter' => $this->chapter]).'?page=2');
 
         $history = ReadingHistory::where('comic_id', $this->comic->id)->first();
 
@@ -408,19 +411,19 @@ class ReadingHistoryTest extends TestCase
     {
         // Try to access a page that doesn't exist
         $this->actingAs($this->user)
-            ->get(route('chapter.reader', ['comic' => $this->comic, 'chapter' => $this->chapter]) . '?page=999');
+            ->get(route('chapter.reader', ['comic' => $this->comic, 'chapter' => $this->chapter]).'?page=999');
 
         // Should still get a successful response (doesn't crash)
         $response = $this->actingAs($this->user)
-            ->get(route('chapter.reader', ['comic' => $this->comic, 'chapter' => $this->chapter]) . '?page=999');
-        
+            ->get(route('chapter.reader', ['comic' => $this->comic, 'chapter' => $this->chapter]).'?page=999');
+
         $response->assertOk();
-        
+
         // Should still create a reading history record with the first page
         $history = ReadingHistory::where('user_id', $this->user->id)
             ->where('comic_id', $this->comic->id)
             ->first();
-        
+
         $this->assertNotNull($history);
         // Should default to first page or current page (1)
         $this->assertNotNull($history->page_number);
@@ -432,7 +435,7 @@ class ReadingHistoryTest extends TestCase
     public function test_invalid_comic_chapter_combination_returns_404(): void
     {
         $otherComic = Comic::factory()->create();
-        
+
         $this->get(route('chapter.reader', ['comic' => $otherComic, 'chapter' => $this->chapter]))
             ->assertNotFound();
     }

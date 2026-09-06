@@ -102,7 +102,7 @@ class GenreController extends Controller
             ->where('slug', $slug)
             ->when($genre, fn ($query) => $query->whereKeyNot($genre->getKey()))
             ->exists()) {
-            $slug = $baseSlug . '-' . $suffix++;
+            $slug = $baseSlug.'-'.$suffix++;
         }
 
         return $slug;

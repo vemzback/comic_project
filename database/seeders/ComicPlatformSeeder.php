@@ -153,7 +153,7 @@ class ComicPlatformSeeder extends Seeder
                         ],
                         [
                             'title' => "Page {$pageNumber}",
-                            'image_path' => "pages/{$comic->slug}/chapter-{$chapterNumber}/page-" . str_pad((string) $pageNumber, 3, '0', STR_PAD_LEFT) . '.jpg',
+                            'image_path' => "pages/{$comic->slug}/chapter-{$chapterNumber}/page-".str_pad((string) $pageNumber, 3, '0', STR_PAD_LEFT).'.jpg',
                         ]
                     );
                 }

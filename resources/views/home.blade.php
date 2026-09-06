@@ -14,7 +14,7 @@
                 <p class="eyebrow">Digital comics / Curated weekly</p>
                 <p class="catalog-index">Issue 001 — {{ now()->format('Y') }}</p>
             </div>
-            <h1>zYx comic</h1>
+            <h1>CATALOG</h1>
             <div class="catalog-hero-bottom">
                 <div class="catalog-intro">
                     <p class="lead">Explore original worlds, new chapters, and genre-defining stories in one bold digital collection.</p>
