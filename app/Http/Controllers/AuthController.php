@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -40,12 +41,19 @@ class AuthController extends Controller
 
         $user = User::create($validated);
 
-        event(new Registered($user));
+        $verificationStatus = 'verification-link-sent';
+
+        try {
+            event(new Registered($user));
+        } catch (Throwable $exception) {
+            report($exception);
+            $verificationStatus = 'verification-link-failed';
+        }
 
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('verification.notice');
+        return redirect()->route('verification.notice')->with('status', $verificationStatus);
     }
 
     public function showLoginForm(): View

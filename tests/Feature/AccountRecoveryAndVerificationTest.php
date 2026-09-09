@@ -7,6 +7,7 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
@@ -119,6 +120,30 @@ class AccountRecoveryAndVerificationTest extends TestCase
         Notification::assertSentTo($user, VerifyEmail::class);
     }
 
+    public function test_registration_survives_a_verification_delivery_failure(): void
+    {
+        config([
+            'mail.default' => 'brevo',
+            'mail.mailers.brevo.api_key' => '',
+        ]);
+        Mail::purge();
+
+        $this->post(route('register'), [
+            'name' => 'Delivery Failure Reader',
+            'email' => 'delivery-failure@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])
+            ->assertRedirect(route('verification.notice'))
+            ->assertSessionHas('status', 'verification-link-failed');
+
+        $this->assertAuthenticated();
+        $this->assertDatabaseHas('users', [
+            'email' => 'delivery-failure@example.com',
+            'email_verified_at' => null,
+        ]);
+    }
+
     public function test_unverified_user_can_view_verification_notice_and_resend_email(): void
     {
         Notification::fake();
@@ -136,6 +161,22 @@ class AccountRecoveryAndVerificationTest extends TestCase
             ->assertSessionHas('status', 'verification-link-sent');
 
         Notification::assertSentTo($user, VerifyEmail::class);
+    }
+
+    public function test_resend_displays_a_clear_message_when_delivery_fails(): void
+    {
+        config([
+            'mail.default' => 'brevo',
+            'mail.mailers.brevo.api_key' => '',
+        ]);
+        Mail::purge();
+
+        $user = User::factory()->unverified()->create();
+
+        $this->actingAs($user)
+            ->post(route('verification.send'))
+            ->assertRedirect()
+            ->assertSessionHas('status', 'verification-link-failed');
     }
 
     public function test_user_can_verify_email_with_a_valid_signed_link(): void

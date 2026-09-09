@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Throwable;
 
 class ProfileController extends Controller
 {
@@ -62,10 +63,17 @@ class ProfileController extends Controller
         $user->save();
 
         if ($emailChanged) {
-            $user->sendEmailVerificationNotification();
+            $verificationStatus = 'verification-link-sent';
+
+            try {
+                $user->sendEmailVerificationNotification();
+            } catch (Throwable $exception) {
+                report($exception);
+                $verificationStatus = 'verification-link-failed';
+            }
 
             return redirect()->route('verification.notice')
-                ->with('status', 'verification-link-sent');
+                ->with('status', $verificationStatus);
         }
 
         return redirect()->route('profile')->with('status', 'Profile updated successfully.');
@@ -91,7 +99,7 @@ class ProfileController extends Controller
 
         try {
             $user->forceFill(['avatar_path' => $avatarPath])->save();
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             Storage::disk('public')->delete($avatarPath);
 
             throw $exception;

@@ -15,6 +15,10 @@
                 <div class="form-success" role="status">
                     A new verification link has been sent to your email address.
                 </div>
+            @elseif (session('status') === 'verification-link-failed')
+                <div class="form-errors" role="alert">
+                    We could not send the verification email right now. Please wait a moment and try again.
+                </div>
             @endif
 
             <div class="verification-actions">

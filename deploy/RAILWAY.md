@@ -73,7 +73,12 @@ GOOGLE_CLIENT_ID=replace_in_railway_only
 GOOGLE_CLIENT_SECRET=replace_in_railway_only
 GOOGLE_REDIRECT_URI=https://your-generated-domain.up.railway.app/auth/google/callback
 
-MAIL_MAILER=log
+MAIL_MAILER=brevo
+MAIL_FROM_ADDRESS=replace_with_verified_sender@example.com
+MAIL_FROM_NAME="zYx comic"
+BREVO_API_KEY=replace_in_railway_only
+BREVO_API_ENDPOINT=https://api.brevo.com/v3/smtp/email
+BREVO_API_TIMEOUT=15
 ```
 
 If Railway names the database service something other than `MySQL`, update the
@@ -83,19 +88,20 @@ Register the exact `GOOGLE_REDIRECT_URI` value as an authorized redirect URI in
 Google Cloud Console. Google login remains unavailable until all three Google
 OAuth variables are configured.
 
-## Email limitation on Trial and Hobby
+## Email delivery on Trial and Hobby
 
-Railway disables outbound SMTP on Free, Trial, and Hobby plans. Keep
-`MAIL_MAILER=log` for the first technical deployment; verification and reset
-messages can then be inspected in the Railway application logs.
+Railway disables outbound SMTP on Free, Trial, and Hobby plans. This project
+therefore sends transactional email through the Brevo HTTPS API by using
+`MAIL_MAILER=brevo` and `BREVO_API_KEY`.
 
-Before client acceptance testing, choose one of these options:
+Before client acceptance testing:
 
-- Add an HTTPS API-based transactional email provider such as Resend.
-- Upgrade to Railway Pro and configure SMTP.
+- Create a Brevo transactional API key and store it only in Railway variables.
+- Set `MAIL_FROM_ADDRESS` to an address verified in Brevo.
+- Confirm registration, resend verification, and password-reset delivery.
 
-Do not enter SMTP credentials on Trial or Hobby because the network connection
-will be blocked even when the credentials are correct.
+Do not configure Brevo SMTP credentials on Trial or Hobby. The API key is
+different from an SMTP key and is sent only to Brevo over HTTPS.
 
 ## Required checks
 
