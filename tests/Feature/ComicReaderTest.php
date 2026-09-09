@@ -17,6 +17,14 @@ class ComicReaderTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_public_layout_displays_the_brand_logo_as_a_home_link(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('aria-label="zYx comic home"', false)
+            ->assertSee('/images/zyx-logo.jpeg', false);
+    }
+
     public function test_public_can_view_comic_detail(): void
     {
         $comic = Comic::factory()->create([

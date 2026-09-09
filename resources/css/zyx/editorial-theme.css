@@ -77,31 +77,12 @@
 
 .public-shell .brand {
     display: inline-flex;
-    align-items: baseline;
-    gap: 0.32rem;
+    align-items: center;
+    align-self: stretch;
+    overflow: hidden;
     color: #fff;
     line-height: 1;
     text-transform: none;
-}
-
-.public-shell .brand-mark,
-.public-shell .brand-sub {
-    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
-    font-weight: 400;
-}
-
-.public-shell .brand-mark {
-    color: var(--primary);
-    font-size: 1.45rem;
-    letter-spacing: -0.02em;
-    text-transform: none;
-}
-
-.public-shell .brand-sub {
-    color: #fff;
-    font-size: 0.84rem;
-    letter-spacing: 0.08em;
-    text-transform: lowercase;
 }
 
 .public-shell .main-nav {
@@ -1216,6 +1197,15 @@
         min-height: 58px;
     }
 
+    .public-shell .brand-logo-frame {
+        width: 2.9rem;
+        height: 2.65rem;
+    }
+
+    .public-shell .brand-logo {
+        height: 5.3rem;
+    }
+
     .public-shell .nav-menu {
         top: 58px;
         border-bottom-color: #3b3b3b;
@@ -1399,4 +1389,3 @@
         margin-left: 0;
     }
 }
-

@@ -13,8 +13,16 @@
         <header class="site-header">
             <div class="container nav-wrap">
                 <a href="{{ route('home') }}" class="brand" aria-label="zYx comic home">
-                    <span class="brand-mark">zYx</span>
-                    <span class="brand-sub">comic</span>
+                    <span class="brand-logo-frame" aria-hidden="true">
+                        <img
+                            src="{{ asset('images/zyx-logo.jpeg') }}"
+                            alt=""
+                            class="brand-logo"
+                            width="456"
+                            height="506"
+                        >
+                    </span>
+                    <span class="sr-only">zYx comic</span>
                 </a>
 
                 <button class="menu-toggle" aria-expanded="false" aria-controls="site-menu" aria-label="Toggle navigation menu">
