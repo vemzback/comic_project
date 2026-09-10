@@ -32,6 +32,24 @@
     gap: 2rem;
 }
 
+.admin-shell .footer-admin-summary {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.admin-shell .footer-admin-summary p {
+    margin: 0;
+}
+
+.admin-shell .footer-admin-summary a {
+    color: var(--primary);
+    font-weight: 700;
+}
+
 .public-shell {
     --bg: #0a0a0a;
     --surface: #111111;
@@ -79,14 +97,36 @@
     display: inline-flex;
     align-items: center;
     align-self: stretch;
+    gap: 0.35rem;
     overflow: hidden;
     color: #fff;
     line-height: 1;
     text-transform: none;
 }
 
+.public-shell .brand-wordmark {
+    color: #f5f2e9;
+    font-family: "Arial Black", "Arial Narrow", Arial, sans-serif;
+    font-size: 0.88rem;
+    font-weight: 900;
+    letter-spacing: -0.035em;
+    line-height: 1;
+    transform: translateY(1px);
+}
+
 .public-shell .main-nav {
-    gap: 1.4rem;
+    gap: 0.2rem;
+}
+
+.public-shell .main-nav.glow-menu {
+    position: relative;
+    isolation: isolate;
+    padding: 0.3rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.9rem;
+    background: linear-gradient(180deg, rgba(30, 30, 30, 0.72), rgba(12, 12, 12, 0.42));
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.24), inset 0 1px rgba(255, 255, 255, 0.035);
+    backdrop-filter: blur(14px);
 }
 
 .public-shell .main-nav a,
@@ -99,29 +139,110 @@
     text-transform: uppercase;
 }
 
-.public-shell .main-nav a::after {
-    position: absolute;
-    right: 0;
-    bottom: -0.45rem;
-    left: 0;
-    height: 2px;
-    background: var(--primary);
-    content: "";
-    opacity: 0;
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: 0.2s ease;
+.public-shell .nav-glow-link {
+    --nav-accent: #ff4b2b;
+    --nav-glow: rgba(255, 75, 43, 0.3);
+    position: relative;
+    display: grid;
+    min-height: 2.35rem;
+    padding: 0 0.8rem;
+    overflow: hidden;
+    border-radius: 0.65rem;
+    place-items: center;
+    perspective: 600px;
+    isolation: isolate;
 }
 
-.public-shell .main-nav a:hover::after,
-.public-shell .main-nav a:focus-visible::after,
-.public-shell .main-nav a[aria-current="page"]::after {
+.public-shell .nav-glow-comics {
+    --nav-accent: #ff9f43;
+    --nav-glow: rgba(255, 159, 67, 0.3);
+}
+
+.public-shell .nav-glow-genres {
+    --nav-accent: #b983ff;
+    --nav-glow: rgba(185, 131, 255, 0.3);
+}
+
+.public-shell .nav-glow-search {
+    --nav-accent: #63b3ff;
+    --nav-glow: rgba(99, 179, 255, 0.3);
+}
+
+.public-shell .nav-glow-link::before {
+    position: absolute;
+    inset: -45%;
+    z-index: -1;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--nav-glow) 0%, transparent 68%);
+    content: "";
+    opacity: 0;
+    transform: scale(0.58);
+    transition: opacity 0.42s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.public-shell .nav-glow-back {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    border-bottom: 2px solid var(--nav-accent);
+    background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--nav-accent) 13%, transparent));
+    color: #fff;
+    opacity: 0;
+    transform: rotateX(90deg);
+    transform-origin: center top;
+    transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.26s ease;
+    place-items: center;
+}
+
+.public-shell .nav-glow-content {
+    display: flex;
+    align-items: center;
+    gap: 0.42rem;
+    transform-origin: center bottom;
+    transform-style: preserve-3d;
+    transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.26s ease;
+}
+
+.public-shell .nav-glow-icon {
+    width: 0.95rem;
+    height: 0.95rem;
+    fill: none;
+    stroke: var(--nav-accent);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+    transition: filter 0.3s ease, transform 0.3s ease;
+}
+
+.public-shell .nav-glow-link:hover::before,
+.public-shell .nav-glow-link:focus-visible::before,
+.public-shell .nav-glow-link[aria-current="page"]::before {
     opacity: 1;
-    transform: scaleX(1);
+    transform: scale(1.25);
+}
+
+.public-shell .nav-glow-link:hover .nav-glow-content,
+.public-shell .nav-glow-link:focus-visible .nav-glow-content {
+    opacity: 0;
+    transform: rotateX(-90deg);
+}
+
+.public-shell .nav-glow-link:hover .nav-glow-back,
+.public-shell .nav-glow-link:focus-visible .nav-glow-back {
+    opacity: 1;
+    transform: rotateX(0);
+}
+
+.public-shell .nav-glow-link:hover .nav-glow-icon,
+.public-shell .nav-glow-link:focus-visible .nav-glow-icon,
+.public-shell .nav-glow-link[aria-current="page"] .nav-glow-icon {
+    filter: drop-shadow(0 0 0.4rem var(--nav-accent));
+    transform: translateY(-1px);
 }
 
 .public-shell .main-nav a[aria-current="page"] {
     color: #fff;
+    background: color-mix(in srgb, var(--nav-accent) 10%, transparent);
 }
 
 .public-shell .btn {
@@ -1150,31 +1271,85 @@
     padding: 4rem 0 1.5rem;
 }
 
-.public-shell .footer-topline {
+.public-shell .footer-main {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 3rem;
-    align-items: end;
-    padding-bottom: 2rem;
+    grid-template-columns: minmax(260px, 1.6fr) repeat(3, minmax(130px, 0.7fr));
+    gap: clamp(2rem, 5vw, 4.5rem);
+    padding-bottom: 2.5rem;
     border-bottom: 1px solid var(--border);
 }
 
-.public-shell .footer-topline h3 {
-    margin: 0 0 0.4rem;
+.public-shell .footer-about h2 {
+    margin: 0 0 0.75rem;
     color: #fff;
-    font-size: 1.35rem;
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+    font-size: clamp(2.3rem, 4vw, 4rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
     text-transform: none;
 }
 
-.public-shell .footer-topline p:last-child {
+.public-shell .footer-about > p:last-child,
+.public-shell .footer-connect > p {
     margin: 0;
     color: var(--muted);
+    line-height: 1.65;
 }
 
-.public-shell .footer-links {
+.public-shell .footer-column h3 {
+    margin: 0 0 1rem;
+    color: #f5f2e9;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.public-shell .footer-column .footer-links {
     display: grid;
-    grid-template-columns: repeat(2, auto);
-    gap: 0.75rem 2.5rem;
+    gap: 0.7rem;
+}
+
+.public-shell .footer-social-list {
+    display: flex;
+    gap: 0.45rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+    flex-wrap: wrap;
+}
+
+.public-shell .footer-social-list li {
+    padding: 0.3rem 0.55rem;
+    border: 1px solid #343434;
+    border-radius: 999px;
+    color: #817e78;
+    font-size: 0.56rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.public-shell .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    padding-top: 1.25rem;
+    color: #77746e;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    flex-wrap: wrap;
+}
+
+.public-shell .footer-bottom p {
+    margin: 0;
+}
+
+.public-shell .mobile-menu-panel {
+    display: none;
 }
 
 @media (max-width: 1024px) {
@@ -1194,26 +1369,211 @@
     }
 
     .public-shell .nav-wrap {
+        position: relative;
         min-height: 58px;
+        padding: 0.4rem 0;
+        gap: 0.55rem;
+        flex-wrap: nowrap;
     }
 
     .public-shell .brand-logo-frame {
-        width: 2.9rem;
-        height: 2.65rem;
+        width: 2.35rem;
+        height: 2.35rem;
     }
 
-    .public-shell .brand-logo {
-        height: 5.3rem;
+    .public-shell .brand {
+        order: initial;
+        flex: 0 0 auto;
+        gap: 0.25rem;
+    }
+
+    .public-shell .brand-wordmark {
+        font-size: 0.8rem;
+    }
+
+    .public-shell .menu-toggle {
+        display: flex;
+        flex: 0 0 2.6rem;
+        width: 2.6rem;
+        height: 2.6rem;
+        margin-left: auto;
+        padding: 0.55rem;
+        border: 1px solid #343434;
+        border-radius: 0.7rem;
+        background: rgba(19, 19, 19, 0.94);
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.22);
+    }
+
+    .public-shell .menu-toggle .hamburger-line {
+        background: var(--primary);
     }
 
     .public-shell .nav-menu {
-        top: 58px;
-        border-bottom-color: #3b3b3b;
-        background: #0a0a0a;
+        position: absolute;
+        top: 50%;
+        right: auto;
+        left: 50%;
+        display: flex;
+        order: initial;
+        width: auto;
+        min-width: 0;
+        max-height: none;
+        overflow: visible;
+        border-bottom: 0;
+        background: transparent;
+        flex: 0 1 auto;
+        align-items: center;
+        flex-direction: row;
+        gap: 0.4rem;
+        transform: translate(-50%, -50%);
+    }
+
+    .public-shell .main-nav.glow-menu {
+        display: grid;
+        grid-template-columns: repeat(4, 2.35rem);
+        min-width: 0;
+        flex: 0 1 auto;
+        gap: 0.15rem;
+        width: auto;
+        padding: 0.25rem;
+    }
+
+    .public-shell .nav-glow-link {
+        display: flex;
+        min-height: 2.5rem;
+        padding: 0.55rem 0.2rem;
+        border-radius: 0.5rem;
+        font-size: clamp(0.54rem, 2.4vw, 0.68rem);
+        letter-spacing: 0.06em;
+        justify-content: center;
+    }
+
+    .public-shell .nav-glow-content {
+        gap: 0.28rem;
+    }
+
+    .public-shell .nav-glow-content > span {
+        display: none;
+    }
+
+    .public-shell .nav-glow-icon {
+        width: 0.82rem;
+        height: 0.82rem;
+    }
+
+    .public-shell .nav-glow-back {
+        display: none;
+    }
+
+    .public-shell .nav-glow-link:hover .nav-glow-content,
+    .public-shell .nav-glow-link:focus-visible .nav-glow-content {
+        opacity: 1;
+        transform: none;
     }
 
     .public-shell .main-nav a[aria-current="page"] {
-        border-left: 3px solid var(--primary);
+        border-bottom: 2px solid var(--nav-accent);
+        border-left: 0;
+    }
+
+    .public-shell .nav-actions {
+        display: none;
+    }
+
+    .public-shell .mobile-menu-panel {
+        position: absolute;
+        top: calc(100% + 0.45rem);
+        right: 0;
+        left: 0;
+        z-index: 40;
+        display: block;
+        max-height: 0;
+        padding: 0 0.65rem;
+        overflow: hidden;
+        border: 1px solid transparent;
+        border-radius: 0.85rem;
+        background: rgba(10, 10, 10, 0.98);
+        box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.45);
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(-0.5rem);
+        transition:
+            max-height 0.3s ease,
+            padding 0.3s ease,
+            border-color 0.3s ease,
+            opacity 0.2s ease,
+            transform 0.3s ease;
+    }
+
+    .public-shell .mobile-menu-panel[data-open="true"] {
+        max-height: min(70vh, 34rem);
+        padding: 0.65rem;
+        overflow-y: auto;
+        border-color: #343434;
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+
+    .public-shell .mobile-text-nav,
+    .public-shell .mobile-account-nav {
+        display: grid;
+        gap: 0.25rem;
+    }
+
+    .public-shell .mobile-account-nav {
+        margin-top: 0.6rem;
+        padding-top: 0.6rem;
+        border-top: 1px solid #2f2f2f;
+    }
+
+    .public-shell .mobile-text-nav a,
+    .public-shell .mobile-account-nav a,
+    .public-shell .mobile-logout-form button {
+        display: flex;
+        width: 100%;
+        min-height: 2.75rem;
+        align-items: center;
+        padding: 0.7rem 0.85rem;
+        border: 1px solid transparent;
+        border-radius: 0.55rem;
+        background: transparent;
+        color: #e8e6e2;
+        font-family: var(--font-display);
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.11em;
+        text-align: left;
+        text-transform: uppercase;
+        cursor: pointer;
+    }
+
+    .public-shell .mobile-text-nav a:hover,
+    .public-shell .mobile-text-nav a:focus-visible,
+    .public-shell .mobile-account-nav a:hover,
+    .public-shell .mobile-account-nav a:focus-visible,
+    .public-shell .mobile-logout-form button:hover,
+    .public-shell .mobile-logout-form button:focus-visible {
+        border-color: #3a3a3a;
+        background: #171717;
+        color: #fff;
+    }
+
+    .public-shell .mobile-text-nav a[aria-current="page"] {
+        border-color: rgba(255, 75, 51, 0.45);
+        background: linear-gradient(90deg, rgba(255, 75, 51, 0.2), rgba(255, 75, 51, 0.05));
+        color: #fff;
+        box-shadow: inset 3px 0 0 var(--primary);
+    }
+
+    .public-shell .mobile-account-nav .mobile-register-link {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: #0a0a0a;
+    }
+
+    .public-shell .mobile-logout-form {
+        margin: 0;
     }
 
     .catalog-hero-top {
@@ -1278,12 +1638,13 @@
         flex-wrap: wrap;
     }
 
-    .public-shell .footer-topline {
-        grid-template-columns: 1fr;
+    .public-shell .footer-main {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 2rem 1.5rem;
     }
 
-    .public-shell .footer-links {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .public-shell .footer-about {
+        grid-column: 1 / -1;
     }
 
     .public-shell .genre-name {
@@ -1321,6 +1682,69 @@
 }
 
 @media (max-width: 420px) {
+    .public-shell .container {
+        width: min(100% - 1rem, 1320px);
+    }
+
+    .public-shell .nav-wrap {
+        gap: 0.3rem;
+    }
+
+    .public-shell .brand-logo-frame {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    .public-shell .brand-wordmark {
+        font-size: 0.74rem;
+    }
+
+    .public-shell .nav-menu {
+        gap: 0.3rem;
+    }
+
+    .public-shell .menu-toggle {
+        flex-basis: 2.25rem;
+        width: 2.25rem;
+        height: 2.25rem;
+        padding: 0.42rem;
+        border-radius: 0.6rem;
+    }
+
+    .public-shell .menu-toggle .menu-icon,
+    .public-shell .menu-toggle .hamburger-line {
+        width: 1.15rem;
+    }
+
+    .public-shell .main-nav.glow-menu {
+        grid-template-columns: repeat(4, 2rem);
+        gap: 0.05rem;
+        padding: 0.15rem;
+        border-radius: 0.7rem;
+    }
+
+    .public-shell .nav-glow-link {
+        min-height: 2.25rem;
+        padding: 0.45rem 0.35rem;
+    }
+
+    .public-shell .nav-glow-icon {
+        width: 1rem;
+        height: 1rem;
+    }
+
+    .public-shell .footer-main {
+        grid-template-columns: 1fr;
+    }
+
+    .public-shell .footer-about {
+        grid-column: auto;
+    }
+
+    .public-shell .footer-bottom {
+        display: grid;
+    }
+
     .catalog-index {
         display: none;
     }

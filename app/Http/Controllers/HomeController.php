@@ -19,7 +19,6 @@ class HomeController extends Controller
                 'latestComics' => collect(),
                 'latestChapters' => collect(),
                 'continueReading' => collect(),
-                'genres' => collect(),
             ]);
         }
 
@@ -71,13 +70,7 @@ class HomeController extends Controller
             }
         }
 
-        $genres = Genre::query()
-            ->withCount('comics')
-            ->orderBy('name')
-            ->limit(8)
-            ->get();
-
-        return view('home', compact('featuredComics', 'latestComics', 'latestChapters', 'continueReading', 'genres'));
+        return view('home', compact('featuredComics', 'latestComics', 'latestChapters', 'continueReading'));
     }
 
     public function comics(): View

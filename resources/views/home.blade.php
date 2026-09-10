@@ -3,68 +3,52 @@
 @section('title', 'Home | zYx comic')
 
 @section('content')
-    <section class="hero-section">
-        <div class="container catalog-hero">
+    <section class="hero-section home-fan-hero">
+        <div class="container">
             @php
-                $spotlight = $latestComics->firstWhere('title', 'NailBiter: The Munder Edition')
-                    ?? $featuredComics->first();
+                $heroComics = $featuredComics
+                    ->concat($latestComics)
+                    ->unique('id')
+                    ->take(7)
+                    ->values();
             @endphp
 
-            <div class="catalog-hero-top">
-                <p class="eyebrow">Digital comics / Curated weekly</p>
-                <p class="catalog-index">Issue 001 — {{ now()->format('Y') }}</p>
-            </div>
-            <h1>CATALOG</h1>
-            <div class="catalog-hero-bottom">
-                <div class="catalog-intro">
-                    <p class="lead">Explore original worlds, new chapters, and genre-defining stories in one bold digital collection.</p>
-                    <div class="hero-actions">
-                        <a href="{{ route('comics') }}" class="btn btn-primary">Explore catalog</a>
-                        <a href="{{ route('genres') }}" class="text-link">Browse by genre <span aria-hidden="true">↗</span></a>
+            @if ($heroComics->isNotEmpty())
+                <div class="home-fan-carousel" data-home-fan tabindex="0" aria-label="Featured comic carousel">
+                    <div class="home-fan-stage" data-home-fan-stage>
+                        @foreach ($heroComics as $comic)
+                            <a href="{{ route('comic.detail', $comic) }}"
+                               class="home-fan-card"
+                               data-home-fan-card
+                               data-title="{{ $comic->title }}"
+                               aria-label="View {{ $comic->title }}">
+                                <img src="{{ $comic->cover_image && Storage::disk('public')->exists($comic->cover_image) ? Storage::disk('public')->url($comic->cover_image) : asset('images/media-placeholder.svg') }}"
+                                     alt="{{ $comic->title }} cover"
+                                     decoding="async"
+                                     @if ($loop->first) fetchpriority="high" @else loading="lazy" @endif>
+                                <span class="home-fan-card-edge" aria-hidden="true"></span>
+                            </a>
+                        @endforeach
+                    </div>
+
+                    <div class="home-fan-controls">
+                        <button type="button" class="home-fan-arrow" data-home-fan-prev aria-label="Previous comic">
+                            <span aria-hidden="true">←</span>
+                        </button>
+                        <p class="home-fan-current" aria-live="polite">
+                            <span data-home-fan-current>01</span>
+                            <strong data-home-fan-title>{{ $heroComics->first()->title }}</strong>
+                            <span>/ {{ str_pad((string) $heroComics->count(), 2, '0', STR_PAD_LEFT) }}</span>
+                        </p>
+                        <button type="button" class="home-fan-arrow" data-home-fan-next aria-label="Next comic">
+                            <span aria-hidden="true">→</span>
+                        </button>
                     </div>
                 </div>
-
-                @if ($spotlight)
-                    <a href="{{ route('comic.detail', $spotlight) }}" class="catalog-spotlight">
-                        <img src="{{ $spotlight->cover_image && Storage::disk('public')->exists($spotlight->cover_image) ? Storage::disk('public')->url($spotlight->cover_image) : asset('images/media-placeholder.svg') }}"
-                             alt="{{ $spotlight->title }} cover"
-                             class="spotlight-cover"
-                             decoding="async">
-                        <span class="spotlight-copy">
-                            <span class="card-label">Featured release</span>
-                            <strong>{{ $spotlight->title }}</strong>
-                            <span>Read now ↗</span>
-                        </span>
-                    </a>
-                @else
-                    <div class="catalog-spotlight catalog-spotlight-empty">
-                        <span class="spotlight-copy">
-                            <span class="card-label">Featured release</span>
-                            <strong>New stories coming soon</strong>
-                        </span>
-                    </div>
-                @endif
-            </div>
-        </div>
-    </section>
-
-    <section class="section-block">
-        <div class="container">
-            <div class="section-heading">
-                <div>
-                    <p class="eyebrow">Editor selections</p>
-                    <h2>Featured comics</h2>
-                </div>
-                <a href="{{ route('comics') }}">View all ↗</a>
-            </div>
-
-            @if ($featuredComics->isEmpty())
-                <p class="empty-state">No featured comics yet.</p>
             @else
-                <div class="card-grid four-up">
-                    @foreach ($featuredComics as $comic)
-                        @include('public.partials.comic-card', ['comic' => $comic, 'descriptionLimit' => 110])
-                    @endforeach
+                <div class="home-fan-empty">
+                    <p>No published comics are available yet.</p>
+                    <a href="{{ route('comics') }}" class="btn btn-primary">Explore catalog</a>
                 </div>
             @endif
         </div>
@@ -151,28 +135,4 @@
         </section>
     @endauth
 
-    <section class="section-block alt-block">
-        <div class="container">
-            <div class="section-heading">
-                <div>
-                    <p class="eyebrow">Find your world</p>
-                    <h2>Genres</h2>
-                </div>
-                <a href="{{ route('genres') }}">See all ↗</a>
-            </div>
-
-            @if ($genres->isEmpty())
-                <p class="empty-state">No genres available yet.</p>
-            @else
-                <div class="genre-grid">
-                    @foreach ($genres as $genre)
-                        <a href="{{ route('genres.show', $genre) }}" class="genre-card">
-                            <span class="genre-name">{{ $genre->name }}</span>
-                            <span class="genre-count">{{ $genre->comics_count }} comic(s)</span>
-                        </a>
-                    @endforeach
-                </div>
-            @endif
-        </div>
-    </section>
 @endsection

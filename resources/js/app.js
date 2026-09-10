@@ -167,10 +167,103 @@ document.addEventListener('DOMContentLoaded', function() {
     startAutoplay();
 });
 
+// Responsive cover fan for the homepage hero.
+document.addEventListener('DOMContentLoaded', function() {
+    const carousel = document.querySelector('[data-home-fan]');
+
+    if (!carousel) return;
+
+    const stage = carousel.querySelector('[data-home-fan-stage]');
+    const cards = Array.from(carousel.querySelectorAll('[data-home-fan-card]'));
+    const previousButton = carousel.querySelector('[data-home-fan-prev]');
+    const nextButton = carousel.querySelector('[data-home-fan-next]');
+    const currentLabel = carousel.querySelector('[data-home-fan-current]');
+    const titleLabel = carousel.querySelector('[data-home-fan-title]');
+    let centerIndex = Math.floor(cards.length / 2);
+    let pointerStartX = null;
+
+    if (!stage || cards.length === 0) return;
+
+    const updateFan = () => {
+        const stageWidth = stage.clientWidth;
+        const cardWidth = cards[0].getBoundingClientRect().width;
+        const spacing = Math.min(cardWidth * 0.62, stageWidth / Math.max(cards.length + 0.5, 4));
+        const half = Math.floor(cards.length / 2);
+
+        cards.forEach((card, index) => {
+            let distance = index - centerIndex;
+
+            if (distance > half) distance -= cards.length;
+            if (distance < -half) distance += cards.length;
+
+            const absoluteDistance = Math.abs(distance);
+            const isActive = distance === 0;
+
+            card.style.setProperty('--fan-x', `${distance * spacing}px`);
+            card.style.setProperty('--fan-y', `${Math.pow(absoluteDistance, 1.55) * 9}px`);
+            card.style.setProperty('--fan-rotation', `${distance * 7}deg`);
+            card.style.setProperty('--fan-scale', String(Math.max(0.72, 1 - absoluteDistance * 0.075)));
+            card.style.setProperty('--fan-z', String(20 - absoluteDistance));
+            card.toggleAttribute('data-active', isActive);
+            card.setAttribute('aria-current', isActive ? 'true' : 'false');
+        });
+
+        if (currentLabel) currentLabel.textContent = String(centerIndex + 1).padStart(2, '0');
+        if (titleLabel) titleLabel.textContent = cards[centerIndex].dataset.title;
+    };
+
+    const move = (direction) => {
+        centerIndex = (centerIndex + direction + cards.length) % cards.length;
+        updateFan();
+    };
+
+    previousButton?.addEventListener('click', () => move(-1));
+    nextButton?.addEventListener('click', () => move(1));
+
+    carousel.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            move(-1);
+        }
+
+        if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            move(1);
+        }
+    });
+
+    carousel.addEventListener('pointerdown', (event) => {
+        if (event.pointerType === 'touch') pointerStartX = event.clientX;
+    });
+
+    carousel.addEventListener('pointerup', (event) => {
+        if (pointerStartX === null || event.pointerType !== 'touch') return;
+
+        const distance = event.clientX - pointerStartX;
+        pointerStartX = null;
+
+        if (Math.abs(distance) >= 42) move(distance < 0 ? 1 : -1);
+    });
+
+    carousel.addEventListener('pointercancel', () => {
+        pointerStartX = null;
+    });
+
+    if ('ResizeObserver' in window) {
+        const resizeObserver = new ResizeObserver(updateFan);
+        resizeObserver.observe(stage);
+    } else {
+        window.addEventListener('resize', updateFan);
+    }
+
+    updateFan();
+});
+
 // Mobile menu toggle
 document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.querySelector('.menu-toggle');
-    const navMenu = document.getElementById('site-menu');
+    const menuId = menuToggle?.getAttribute('aria-controls');
+    const navMenu = menuId ? document.getElementById(menuId) : null;
 
     if (!menuToggle || !navMenu) return;
 

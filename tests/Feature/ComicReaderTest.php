@@ -17,12 +17,20 @@ class ComicReaderTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_public_layout_displays_the_brand_logo_as_a_home_link(): void
+    public function test_public_layout_displays_the_brand_logo_and_matching_favicon(): void
     {
         $this->get(route('home'))
             ->assertOk()
             ->assertSee('aria-label="zYx comic home"', false)
-            ->assertSee('/images/zyx-logo.jpeg', false);
+            ->assertSee('rel="icon" type="image/png"', false)
+            ->assertSee('/images/zyx-logo-transparent.png', false)
+            ->assertSee('class="brand-wordmark"', false)
+            ->assertSee('class="main-nav glow-menu"', false)
+            ->assertSee('class="nav-glow-link nav-glow-home"', false)
+            ->assertSee('aria-controls="mobile-menu-panel"', false)
+            ->assertSee('class="mobile-text-nav"', false)
+            ->assertSee('Established 2026')
+            ->assertSee('Contact &amp; social', false);
     }
 
     public function test_public_can_view_comic_detail(): void
@@ -38,6 +46,21 @@ class ComicReaderTest extends TestCase
         $response->assertSee('data-expandable-description', false);
         $response->assertSee('Selengkapnya');
         $response->assertViewHas('comic', $comic);
+    }
+
+    public function test_homepage_uses_cover_fan_without_the_duplicate_genre_section(): void
+    {
+        Comic::factory()->count(3)->create([
+            'published_at' => now(),
+        ]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('data-home-fan', false)
+            ->assertSee('data-home-fan-card', false)
+            ->assertDontSee('Discover your next story')
+            ->assertDontSee('Editor selections')
+            ->assertDontSee('Find your world');
     }
 
     public function test_google_books_comic_detail_offers_a_lazy_embedded_preview(): void
